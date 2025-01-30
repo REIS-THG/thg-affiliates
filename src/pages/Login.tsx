@@ -22,13 +22,13 @@ const Login = () => {
     try {
       console.log("Attempting login with username:", username);
       
-      // Query the Affiliate Users table directly
+      // Query the Affiliate Users table directly with proper error handling
       const { data: affiliateUser, error } = await supabase
         .from('Affiliate Users')
         .select('*')
         .eq('username', username)
         .eq('password', password)
-        .single();
+        .maybeSingle();
 
       console.log("Query response:", { affiliateUser, error });
 
