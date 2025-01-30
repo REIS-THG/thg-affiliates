@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,35 +18,27 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) throw authError;
-
-      // Fetch affiliate user data
-      const { data: affiliateData, error: affiliateError } = await supabase
+      // Query the Affiliate Users table directly
+      const { data: affiliateUser, error } = await supabase
         .from('Affiliate Users')
         .select('*')
-        .eq('user_id', authData.user.id)
+        .eq('username', username)
+        .eq('password', password)
         .single();
 
-      if (affiliateError) {
-        console.error('Error fetching affiliate data:', affiliateError);
+      if (error) throw error;
+
+      if (affiliateUser) {
+        // Store affiliate data in localStorage
+        localStorage.setItem('affiliateUser', JSON.stringify(affiliateUser));
+        navigate("/");
+      } else {
         toast({
-          title: "Warning",
-          description: "Logged in but couldn't fetch affiliate data.",
+          title: "Error",
+          description: "Invalid username or password",
           variant: "destructive",
         });
       }
-
-      // Store affiliate data in localStorage for easy access
-      if (affiliateData) {
-        localStorage.setItem('affiliateUser', JSON.stringify(affiliateData));
-      }
-
-      navigate("/");
     } catch (error) {
       toast({
         title: "Error",
@@ -68,10 +60,10 @@ const Login = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
