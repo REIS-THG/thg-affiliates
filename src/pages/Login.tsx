@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -18,6 +20,8 @@ const Login = () => {
     setLoading(true);
     
     try {
+      console.log("Attempting login with username:", username);
+      
       // Query the Affiliate Users table directly
       const { data: affiliateUser, error } = await supabase
         .from('Affiliate Users')
@@ -26,7 +30,12 @@ const Login = () => {
         .eq('password', password)
         .single();
 
-      if (error) throw error;
+      console.log("Query response:", { affiliateUser, error });
+
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       if (affiliateUser) {
         // Store affiliate data in localStorage
@@ -40,6 +49,7 @@ const Login = () => {
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
         description: "Failed to sign in. Please check your credentials.",
@@ -67,14 +77,27 @@ const Login = () => {
               required
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
