@@ -18,12 +18,34 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // Fetch affiliate user data
+      const { data: affiliateData, error: affiliateError } = await supabase
+        .from('Affiliate Users')
+        .select('*')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      if (affiliateError) {
+        console.error('Error fetching affiliate data:', affiliateError);
+        toast({
+          title: "Warning",
+          description: "Logged in but couldn't fetch affiliate data.",
+          variant: "destructive",
+        });
+      }
+
+      // Store affiliate data in localStorage for easy access
+      if (affiliateData) {
+        localStorage.setItem('affiliateUser', JSON.stringify(affiliateData));
+      }
+
       navigate("/");
     } catch (error) {
       toast({
