@@ -1,5 +1,6 @@
 import { useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   LineChart,
   Line,
@@ -11,8 +12,9 @@ import {
   Legend,
 } from "recharts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Toggle } from "@/components/ui/toggle";
 import { supabase } from "@/lib/supabase";
+import { subDays } from "date-fns";
+import { useState } from "react";
 
 interface CouponData {
   date: string;
@@ -24,11 +26,14 @@ interface CouponUsage {
   data: { date: string; quantity: number; earnings: number }[];
 }
 
-const fetchCouponData = async (): Promise<CouponUsage[]> => {
+const fetchCouponData = async (days: number): Promise<CouponUsage[]> => {
   try {
+    const startDate = subDays(new Date(), days).toISOString().split('T')[0];
+    
     const { data: couponData, error } = await supabase
       .from('coupon_usage')
       .select('*')
+      .gte('date', startDate)
       .order('date', { ascending: true });
 
     if (error) {
@@ -41,7 +46,6 @@ const fetchCouponData = async (): Promise<CouponUsage[]> => {
       return [];
     }
 
-    // Transform the data into the required format
     const groupedData = couponData.reduce((acc: { [key: string]: any }, curr) => {
       if (!acc[curr.code]) {
         acc[curr.code] = {
@@ -74,10 +78,11 @@ const COLORS = [
 
 export const LeaderboardChart = () => {
   const queryClient = useQueryClient();
+  const [timeRange, setTimeRange] = useState<string>("30");
   
   const { data = [], isLoading, error } = useQuery({
-    queryKey: ["couponData"],
-    queryFn: fetchCouponData,
+    queryKey: ["couponData", timeRange],
+    queryFn: () => fetchCouponData(parseInt(timeRange)),
     refetchInterval: 30000,
   });
 
@@ -86,8 +91,8 @@ export const LeaderboardChart = () => {
       .channel('coupon_usage_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'coupon_usage' },
-        (payload) => {
-          queryClient.invalidateQueries({ queryKey: ['couponData'] });
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['couponData', timeRange] });
         }
       )
       .subscribe();
@@ -95,7 +100,7 @@ export const LeaderboardChart = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, timeRange]);
 
   const processedData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -142,6 +147,19 @@ export const LeaderboardChart = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <ToggleGroup type="single" value={timeRange} onValueChange={(value) => value && setTimeRange(value)}>
+          <ToggleGroupItem value="30" aria-label="30 days">
+            30d
+          </ToggleGroupItem>
+          <ToggleGroupItem value="60" aria-label="60 days">
+            60d
+          </ToggleGroupItem>
+          <ToggleGroupItem value="90" aria-label="90 days">
+            90d
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
       <Card className="w-full h-[400px] p-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={processedData}>
