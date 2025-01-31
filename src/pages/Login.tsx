@@ -30,21 +30,26 @@ const Login = () => {
         return;
       }
       
-      console.log("Attempting login with:", { couponCode });
+      console.log("Attempting login with coupon code:", couponCode);
       
       // Query the Affiliate Users table
       const { data: affiliateUser, error } = await supabase
         .from('Affiliate Users')
         .select('*')
-        .eq('coupon_code', couponCode)
-        .eq('password', password)
+        .eq('coupon_code', couponCode.trim())
+        .eq('password', password.trim())
         .single();
 
       console.log("Login response:", { affiliateUser, error });
 
       if (error) {
         console.error("Supabase error:", error);
-        throw error;
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
 
       if (affiliateUser) {

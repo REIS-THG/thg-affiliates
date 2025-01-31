@@ -7,6 +7,14 @@ export interface AffiliateUser {
   role?: string;
 }
 
+export interface CouponUsage {
+  id: string;
+  created_at: string;
+  coupon_code: string;
+  amount: number;
+  user_id: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -16,15 +24,9 @@ export type Database = {
         Update: Partial<Omit<AffiliateUser, 'id' | 'created_at'>>;
       };
       'coupon_usage': {
-        Row: {
-          id: string;
-          created_at: string;
-          coupon_code: string;
-          amount: number;
-          user_id: string;
-        };
-        Insert: Omit<Row, 'id' | 'created_at'>;
-        Update: Partial<Omit<Row, 'id' | 'created_at'>>;
+        Row: CouponUsage;
+        Insert: Omit<CouponUsage, 'id' | 'created_at'>;
+        Update: Partial<Omit<CouponUsage, 'id' | 'created_at'>>;
       };
     };
   };
