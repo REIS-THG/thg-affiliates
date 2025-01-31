@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { UsageAnalytics } from "@/components/UsageAnalytics";
 import { UsageHistory } from "@/components/UsageHistory";
+import { AffiliateEarnings } from "@/components/AffiliateEarnings";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Header onLogout={handleLogout} />
       <main className="container mx-auto p-6 space-y-6">
+        <AffiliateEarnings />
         <div className="grid gap-6">
           <UsageAnalytics couponCode={couponCode} />
           <UsageHistory />

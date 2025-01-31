@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import {
   LineChart,
@@ -12,40 +12,43 @@ import {
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { Toggle } from "@/components/ui/toggle";
+import { supabase } from "@/lib/supabase";
 
 interface CouponData {
   date: string;
-  [key: string]: string | number; // For dynamic coupon codes
+  [key: string]: string | number;
 }
 
 interface CouponUsage {
   code: string;
-  data: { date: string; quantity: number }[];
+  data: { date: string; quantity: number; earnings: number }[];
 }
 
 const fetchCouponData = async (): Promise<CouponUsage[]> => {
-  // TODO: Implement Square API integration
-  // This is mock data for now
-  return [
-    {
-      code: "SUMMER2024",
-      data: [
-        { date: "2024-01", quantity: 65 },
-        { date: "2024-02", quantity: 85 },
-        { date: "2024-03", quantity: 120 },
-        { date: "2024-04", quantity: 90 },
-      ],
-    },
-    {
-      code: "WINTER2024",
-      data: [
-        { date: "2024-01", quantity: 45 },
-        { date: "2024-02", quantity: 95 },
-        { date: "2024-03", quantity: 80 },
-        { date: "2024-04", quantity: 110 },
-      ],
-    },
-  ];
+  const { data: couponData, error } = await supabase
+    .from('coupon_usage')
+    .select('*')
+    .order('date', { ascending: true });
+
+  if (error) throw error;
+
+  // Transform the data into the required format
+  const groupedData = couponData.reduce((acc: { [key: string]: any }, curr) => {
+    if (!acc[curr.code]) {
+      acc[curr.code] = {
+        code: curr.code,
+        data: []
+      };
+    }
+    acc[curr.code].data.push({
+      date: curr.date,
+      quantity: curr.quantity,
+      earnings: curr.earnings
+    });
+    return acc;
+  }, {});
+
+  return Object.values(groupedData);
 };
 
 const COLORS = [
@@ -57,42 +60,52 @@ const COLORS = [
 ];
 
 export const LeaderboardChart = () => {
-  const [visibleCoupons, setVisibleCoupons] = useState<Set<string>>(new Set());
   const { data, isLoading, error } = useQuery({
     queryKey: ["couponData"],
     queryFn: fetchCouponData,
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  const processedData = data?.reduce((acc: CouponData[], coupon) => {
-    if (!acc.length) {
-      return coupon.data.map((d) => ({
-        date: d.date,
-        [coupon.code]: d.quantity,
-      }));
-    }
-    return acc.map((item, i) => ({
-      ...item,
-      [coupon.code]: coupon.data[i].quantity,
-    }));
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const subscription = supabase
+      .channel('coupon_usage_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'coupon_usage' },
+        (payload) => {
+          // Invalidate and refetch when data changes
+          queryClient.invalidateQueries({ queryKey: ['couponData'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const toggleCoupon = (code: string) => {
-    setVisibleCoupons((prev) => {
-      const next = new Set(prev);
-      if (next.has(code)) {
-        next.delete(code);
-      } else {
-        next.add(code);
+  const processedData = useMemo(() => {
+    if (!data) return [];
+    return data.reduce((acc: CouponData[], coupon) => {
+      if (!acc.length) {
+        return coupon.data.map((d) => ({
+          date: d.date,
+          [coupon.code]: d.quantity,
+          [`${coupon.code}_earnings`]: d.earnings,
+        }));
       }
-      return next;
-    });
-  };
+      return acc.map((item, i) => ({
+        ...item,
+        [coupon.code]: coupon.data[i].quantity,
+        [`${coupon.code}_earnings`]: coupon.data[i].earnings,
+      }));
+    }, []);
+  }, [data]);
 
   if (isLoading) {
     return (
       <Card className="w-full h-[400px] relative overflow-hidden">
         <div className="animate-pulse bg-gray-200 w-full h-full" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
       </Card>
     );
   }
@@ -107,18 +120,6 @@ export const LeaderboardChart = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {data?.map((coupon, index) => (
-          <Toggle
-            key={coupon.code}
-            pressed={visibleCoupons.has(coupon.code)}
-            onPressedChange={() => toggleCoupon(coupon.code)}
-            className="data-[state=on]:bg-primary/20"
-          >
-            {coupon.code}
-          </Toggle>
-        ))}
-      </div>
       <Card className="w-full h-[400px] p-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={processedData}>
@@ -135,7 +136,7 @@ export const LeaderboardChart = () => {
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `${value}`}
+              tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
               contentStyle={{
@@ -146,17 +147,16 @@ export const LeaderboardChart = () => {
             />
             <Legend />
             {data?.map((coupon, index) => (
-              visibleCoupons.has(coupon.code) && (
-                <Line
-                  key={coupon.code}
-                  type="monotone"
-                  dataKey={coupon.code}
-                  stroke={COLORS[index % COLORS.length]}
-                  strokeWidth={2}
-                  dot={{ strokeWidth: 2 }}
-                  activeDot={{ r: 6, strokeWidth: 2 }}
-                />
-              )
+              <Line
+                key={coupon.code}
+                type="monotone"
+                dataKey={`${coupon.code}_earnings`}
+                name={`${coupon.code} Earnings`}
+                stroke={COLORS[index % COLORS.length]}
+                strokeWidth={2}
+                dot={{ strokeWidth: 2 }}
+                activeDot={{ r: 6, strokeWidth: 2 }}
+              />
             ))}
           </LineChart>
         </ResponsiveContainer>
