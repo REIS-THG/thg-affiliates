@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { LeaderboardChart } from "@/components/LeaderboardChart";
-import { DataTable } from "@/components/DataTable";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { Header } from "@/components/Header";
+import { UsageAnalytics } from "@/components/UsageAnalytics";
+import { UsageHistory } from "@/components/UsageHistory";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -35,27 +33,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">THG Affiliate Dashboard</h1>
-          <Button variant="ghost" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
+      <Header onLogout={handleLogout} />
       <main className="container mx-auto p-6 space-y-6">
         <div className="grid gap-6">
-          <section>
-            <h2 className="text-xl font-semibold mb-4">{couponCode} Usage Analytics</h2>
-            <Card className="p-6">
-              <LeaderboardChart />
-            </Card>
-          </section>
-          <section>
-            <h2 className="text-xl font-semibold mb-4">Usage History</h2>
-            <DataTable />
-          </section>
+          <UsageAnalytics couponCode={couponCode} />
+          <UsageHistory />
         </div>
       </main>
     </div>
