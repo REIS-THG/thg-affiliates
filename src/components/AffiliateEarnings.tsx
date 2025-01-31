@@ -39,13 +39,15 @@ export const AffiliateEarnings = () => {
     queryFn: fetchEarnings,
     refetchInterval: 30000,
     retry: 1,
-    onError: (error: Error) => {
-      console.error('Query error:', error);
-      toast({
-        title: "Error fetching earnings",
-        description: error.message,
-        variant: "destructive",
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error('Query error:', error);
+        toast({
+          title: "Error fetching earnings",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   });
 
