@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import {
   LineChart,
@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Toggle } from "@/components/ui/toggle";
 import { supabase } from "@/lib/supabase";
 
@@ -60,6 +60,8 @@ const COLORS = [
 ];
 
 export const LeaderboardChart = () => {
+  const queryClient = useQueryClient();
+  
   const { data, isLoading, error } = useQuery({
     queryKey: ["couponData"],
     queryFn: fetchCouponData,
@@ -82,7 +84,7 @@ export const LeaderboardChart = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const processedData = useMemo(() => {
     if (!data) return [];
