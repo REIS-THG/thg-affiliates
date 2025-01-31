@@ -1,9 +1,10 @@
 export interface AffiliateUser {
   id: string;
   created_at: string;
-  email: string;
-  user_id: string;
-  // Add any other columns that exist in your Affiliate Users table
+  coupon_code: string;
+  password: string;
+  email?: string;
+  role?: string;
 }
 
 export type Database = {
@@ -13,6 +14,17 @@ export type Database = {
         Row: AffiliateUser;
         Insert: Omit<AffiliateUser, 'id' | 'created_at'>;
         Update: Partial<Omit<AffiliateUser, 'id' | 'created_at'>>;
+      };
+      'coupon_usage': {
+        Row: {
+          id: string;
+          created_at: string;
+          coupon_code: string;
+          amount: number;
+          user_id: string;
+        };
+        Insert: Omit<Row, 'id' | 'created_at'>;
+        Update: Partial<Omit<Row, 'id' | 'created_at'>>;
       };
     };
   };

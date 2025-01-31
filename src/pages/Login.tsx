@@ -22,10 +22,15 @@ const Login = () => {
     try {
       // Check for default admin login
       if (couponCode === "THGadmin" && password === "THGadmin") {
-        localStorage.setItem('affiliateUser', JSON.stringify({ coupon_code: "THGadmin" }));
+        localStorage.setItem('affiliateUser', JSON.stringify({ 
+          coupon_code: "THGadmin",
+          role: "admin" 
+        }));
         navigate("/");
         return;
       }
+      
+      console.log("Attempting login with:", { couponCode });
       
       // Query the Affiliate Users table
       const { data: affiliateUser, error } = await supabase
@@ -33,14 +38,21 @@ const Login = () => {
         .select('*')
         .eq('coupon_code', couponCode)
         .eq('password', password)
-        .maybeSingle();
+        .single();
+
+      console.log("Login response:", { affiliateUser, error });
 
       if (error) {
+        console.error("Supabase error:", error);
         throw error;
       }
 
       if (affiliateUser) {
         localStorage.setItem('affiliateUser', JSON.stringify(affiliateUser));
+        toast({
+          title: "Success",
+          description: "Successfully logged in",
+        });
         navigate("/");
       } else {
         toast({
