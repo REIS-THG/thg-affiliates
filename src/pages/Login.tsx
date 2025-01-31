@@ -35,8 +35,6 @@ const Login = () => {
         .eq('password', password)
         .maybeSingle();
 
-      console.log("Login attempt:", { couponCode, affiliateUser, error });
-
       if (error) {
         throw error;
       }
