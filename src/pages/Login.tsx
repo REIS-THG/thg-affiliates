@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [couponCode, setCouponCode] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -20,31 +20,34 @@ const Login = () => {
     setLoading(true);
     
     try {
-      console.log("Attempting login with username:", username);
+      // Check for default admin login
+      if (couponCode === "THGadmin" && password === "THGadmin") {
+        localStorage.setItem('affiliateUser', JSON.stringify({ coupon_code: "THGadmin" }));
+        navigate("/");
+        return;
+      }
       
-      // Query the Affiliate Users table directly with proper error handling
+      // Query the Affiliate Users table
       const { data: affiliateUser, error } = await supabase
         .from('Affiliate Users')
         .select('*')
-        .eq('username', username)
+        .eq('coupon_code', couponCode)
         .eq('password', password)
         .maybeSingle();
 
-      console.log("Query response:", { affiliateUser, error });
+      console.log("Login attempt:", { couponCode, affiliateUser, error });
 
       if (error) {
-        console.error("Supabase error:", error);
         throw error;
       }
 
       if (affiliateUser) {
-        // Store affiliate data in localStorage
         localStorage.setItem('affiliateUser', JSON.stringify(affiliateUser));
         navigate("/");
       } else {
         toast({
           title: "Error",
-          description: "Invalid username or password",
+          description: "Invalid coupon code or password",
           variant: "destructive",
         });
       }
@@ -64,16 +67,16 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to your account</p>
+          <h1 className="text-3xl font-bold">THG Affiliate Login</h1>
+          <p className="text-muted-foreground">Sign in to your affiliate dashboard</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Input
               type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Coupon Code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
               required
             />
           </div>
@@ -102,6 +105,11 @@ const Login = () => {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
           </Button>
+          <div className="text-center">
+            <Link to="/forgot-password" className="text-primary hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </form>
       </Card>
     </div>
