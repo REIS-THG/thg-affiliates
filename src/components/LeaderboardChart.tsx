@@ -25,30 +25,43 @@ interface CouponUsage {
 }
 
 const fetchCouponData = async (): Promise<CouponUsage[]> => {
-  const { data: couponData, error } = await supabase
-    .from('coupon_usage')
-    .select('*')
-    .order('date', { ascending: true });
+  try {
+    const { data: couponData, error } = await supabase
+      .from('coupon_usage')
+      .select('*')
+      .order('date', { ascending: true });
 
-  if (error) throw error;
-
-  // Transform the data into the required format
-  const groupedData = couponData.reduce((acc: { [key: string]: any }, curr) => {
-    if (!acc[curr.code]) {
-      acc[curr.code] = {
-        code: curr.code,
-        data: []
-      };
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
     }
-    acc[curr.code].data.push({
-      date: curr.date,
-      quantity: curr.quantity,
-      earnings: curr.earnings
-    });
-    return acc;
-  }, {});
 
-  return Object.values(groupedData);
+    if (!couponData || couponData.length === 0) {
+      console.log('No coupon data found');
+      return [];
+    }
+
+    // Transform the data into the required format
+    const groupedData = couponData.reduce((acc: { [key: string]: any }, curr) => {
+      if (!acc[curr.code]) {
+        acc[curr.code] = {
+          code: curr.code,
+          data: []
+        };
+      }
+      acc[curr.code].data.push({
+        date: curr.date,
+        quantity: curr.quantity || 0,
+        earnings: curr.earnings || 0
+      });
+      return acc;
+    }, {});
+
+    return Object.values(groupedData);
+  } catch (error) {
+    console.error('Error fetching coupon data:', error);
+    throw error;
+  }
 };
 
 const COLORS = [
@@ -62,20 +75,18 @@ const COLORS = [
 export const LeaderboardChart = () => {
   const queryClient = useQueryClient();
   
-  const { data, isLoading, error } = useQuery({
+  const { data = [], isLoading, error } = useQuery({
     queryKey: ["couponData"],
     queryFn: fetchCouponData,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 
-  // Subscribe to real-time updates
   useEffect(() => {
     const subscription = supabase
       .channel('coupon_usage_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'coupon_usage' },
         (payload) => {
-          // Invalidate and refetch when data changes
           queryClient.invalidateQueries({ queryKey: ['couponData'] });
         }
       )
@@ -87,21 +98,30 @@ export const LeaderboardChart = () => {
   }, [queryClient]);
 
   const processedData = useMemo(() => {
-    if (!data) return [];
-    return data.reduce((acc: CouponData[], coupon) => {
-      if (!acc.length) {
-        return coupon.data.map((d) => ({
-          date: d.date,
-          [coupon.code]: d.quantity,
-          [`${coupon.code}_earnings`]: d.earnings,
+    if (!data || data.length === 0) return [];
+    
+    try {
+      return data.reduce((acc: CouponData[], coupon) => {
+        if (!acc.length && coupon.data && coupon.data.length > 0) {
+          return coupon.data.map((d) => ({
+            date: d.date,
+            [coupon.code]: d.quantity,
+            [`${coupon.code}_earnings`]: d.earnings,
+          }));
+        }
+        
+        if (!coupon.data || !acc[0]) return acc;
+        
+        return acc.map((item, i) => ({
+          ...item,
+          [coupon.code]: coupon.data[i]?.quantity || 0,
+          [`${coupon.code}_earnings`]: coupon.data[i]?.earnings || 0,
         }));
-      }
-      return acc.map((item, i) => ({
-        ...item,
-        [coupon.code]: coupon.data[i].quantity,
-        [`${coupon.code}_earnings`]: coupon.data[i].earnings,
-      }));
-    }, []);
+      }, []);
+    } catch (err) {
+      console.error('Error processing data:', err);
+      return [];
+    }
   }, [data]);
 
   if (isLoading) {
@@ -115,7 +135,7 @@ export const LeaderboardChart = () => {
   if (error) {
     return (
       <Card className="w-full h-[400px] flex items-center justify-center">
-        <p className="text-destructive">Error loading data</p>
+        <p className="text-destructive">Error loading data: {error.message}</p>
       </Card>
     );
   }
@@ -148,7 +168,7 @@ export const LeaderboardChart = () => {
               }}
             />
             <Legend />
-            {data?.map((coupon, index) => (
+            {data.map((coupon, index) => (
               <Line
                 key={coupon.code}
                 type="monotone"
