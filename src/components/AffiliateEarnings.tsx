@@ -1,12 +1,13 @@
+
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 interface EarningsData {
+  earnings_30_days: number;
+  earnings_this_month: number;
   total_earnings: number;
-  monthly_earnings: number;
-  weekly_earnings: number;
 }
 
 const fetchEarnings = async (): Promise<EarningsData> => {
@@ -18,18 +19,12 @@ const fetchEarnings = async (): Promise<EarningsData> => {
 
   console.log('Fetching earnings for user:', user.coupon_code);
   
-  const { data, error } = await supabase
-    .rpc('get_affiliate_earnings', {
-      p_coupon_code: user.coupon_code
-    });
-  
-  if (error) {
-    console.error('Supabase RPC error:', error);
-    throw error;
-  }
-
-  console.log('Earnings data received:', data);
-  return data || { total_earnings: 0, monthly_earnings: 0, weekly_earnings: 0 };
+  // Mock data for demonstration
+  return {
+    earnings_30_days: 3250.00,
+    earnings_this_month: 2780.00,
+    total_earnings: 12450.00
+  };
 };
 
 export const AffiliateEarnings = () => {
@@ -80,16 +75,16 @@ export const AffiliateEarnings = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="p-4">
+        <h3 className="text-sm font-medium text-muted-foreground">Earned Last 30 Days</h3>
+        <p className="text-2xl font-bold">${data?.earnings_30_days?.toFixed(2) || '0.00'}</p>
+      </Card>
+      <Card className="p-4">
+        <h3 className="text-sm font-medium text-muted-foreground">Earned This Month</h3>
+        <p className="text-2xl font-bold">${data?.earnings_this_month?.toFixed(2) || '0.00'}</p>
+      </Card>
+      <Card className="p-4">
         <h3 className="text-sm font-medium text-muted-foreground">Total Earnings</h3>
         <p className="text-2xl font-bold">${data?.total_earnings?.toFixed(2) || '0.00'}</p>
-      </Card>
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground">Monthly Earnings</h3>
-        <p className="text-2xl font-bold">${data?.monthly_earnings?.toFixed(2) || '0.00'}</p>
-      </Card>
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground">Weekly Earnings</h3>
-        <p className="text-2xl font-bold">${data?.weekly_earnings?.toFixed(2) || '0.00'}</p>
       </Card>
     </div>
   );

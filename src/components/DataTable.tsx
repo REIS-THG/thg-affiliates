@@ -27,19 +27,19 @@ const fetchCouponUsage = async (): Promise<CouponUsage[]> => {
 
   console.log('Fetching coupon usage for:', user.coupon_code);
   
-  const { data, error } = await supabase
-    .from('coupon_usage')
-    .select('*')
-    .eq('code', user.coupon_code)
-    .order('date', { ascending: false })
-    .limit(10);
-
-  if (error) {
-    console.error('Error fetching coupon usage:', error);
-    throw error;
-  }
-
-  return data || [];
+  // Mock data for demonstration
+  return [
+    { date: '2024-03-15', code: user.coupon_code, quantity: 5, earnings: 250.00 },
+    { date: '2024-03-14', code: user.coupon_code, quantity: 3, earnings: 150.00 },
+    { date: '2024-03-13', code: user.coupon_code, quantity: 7, earnings: 350.00 },
+    { date: '2024-03-12', code: user.coupon_code, quantity: 4, earnings: 200.00 },
+    { date: '2024-03-11', code: user.coupon_code, quantity: 6, earnings: 300.00 },
+    { date: '2024-03-10', code: user.coupon_code, quantity: 8, earnings: 400.00 },
+    { date: '2024-03-09', code: user.coupon_code, quantity: 2, earnings: 100.00 },
+    { date: '2024-03-08', code: user.coupon_code, quantity: 5, earnings: 250.00 },
+    { date: '2024-03-07', code: user.coupon_code, quantity: 3, earnings: 150.00 },
+    { date: '2024-03-06', code: user.coupon_code, quantity: 4, earnings: 200.00 },
+  ];
 };
 
 export const DataTable = () => {
