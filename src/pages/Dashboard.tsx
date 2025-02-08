@@ -1,30 +1,57 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { UsageAnalytics } from "@/components/UsageAnalytics";
 import { UsageHistory } from "@/components/UsageHistory";
 import { AffiliateEarnings } from "@/components/AffiliateEarnings";
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState<string>("");
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkAuth = () => {
-      const user = localStorage.getItem('affiliateUser');
-      if (!user) {
+      const userStr = localStorage.getItem('affiliateUser');
+      if (!userStr) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to access the dashboard",
+          variant: "destructive",
+        });
         navigate('/login');
         return;
       }
-      const { coupon_code } = JSON.parse(user);
-      setCouponCode(coupon_code);
+
+      try {
+        const user = JSON.parse(userStr);
+        if (!user.coupon_code) {
+          throw new Error("Invalid user data");
+        }
+        setCouponCode(user.coupon_code);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        localStorage.removeItem('affiliateUser');
+        toast({
+          title: "Error",
+          description: "Session expired. Please log in again",
+          variant: "destructive",
+        });
+        navigate('/login');
+      }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleLogout = () => {
     localStorage.removeItem('affiliateUser');
+    toast({
+      title: "Success",
+      description: "Successfully logged out",
+    });
     navigate('/login');
   };
 

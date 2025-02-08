@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,15 @@ const Login = () => {
     try {
       // Check for default admin login
       if (couponCode === "THGadmin" && password === "THGadmin") {
-        localStorage.setItem('affiliateUser', JSON.stringify({ 
+        const adminUser = { 
           coupon_code: "THGadmin",
           role: "admin" 
-        }));
+        };
+        localStorage.setItem('affiliateUser', JSON.stringify(adminUser));
+        toast({
+          title: "Success",
+          description: "Successfully logged in as admin",
+        });
         navigate("/");
         return;
       }
