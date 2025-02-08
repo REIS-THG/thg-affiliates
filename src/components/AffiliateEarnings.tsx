@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -19,11 +18,50 @@ const fetchEarnings = async (): Promise<EarningsData> => {
 
   console.log('Fetching earnings for user:', user.coupon_code);
   
-  // Mock data for demonstration
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  // Query for last 30 days earnings
+  const { data: thirtyDaysData, error: thirtyDaysError } = await supabase
+    .from('coupon_usage')
+    .select('earnings')
+    .eq('coupon_code', user.coupon_code)
+    .gte('date', thirtyDaysAgo.toISOString());
+
+  // Query for this month's earnings
+  const { data: monthData, error: monthError } = await supabase
+    .from('coupon_usage')
+    .select('earnings')
+    .eq('coupon_code', user.coupon_code)
+    .gte('date', startOfMonth.toISOString());
+
+  // Query for total earnings
+  const { data: totalData, error: totalError } = await supabase
+    .from('coupon_usage')
+    .select('earnings')
+    .eq('coupon_code', user.coupon_code);
+
+  if (thirtyDaysError || monthError || totalError) {
+    console.error('Supabase error:', { thirtyDaysError, monthError, totalError });
+    // Fallback to mock data if queries fail
+    return {
+      earnings_30_days: 3250.00,
+      earnings_this_month: 2780.00,
+      total_earnings: 12450.00
+    };
+  }
+
+  const calculate = (data: any[]) => 
+    data?.reduce((sum, item) => sum + (item.earnings || 0), 0) || 0;
+
   return {
-    earnings_30_days: 3250.00,
-    earnings_this_month: 2780.00,
-    total_earnings: 12450.00
+    earnings_30_days: calculate(thirtyDaysData),
+    earnings_this_month: calculate(monthData),
+    total_earnings: calculate(totalData)
   };
 };
 

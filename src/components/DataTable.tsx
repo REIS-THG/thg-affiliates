@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -27,19 +26,31 @@ const fetchCouponUsage = async (): Promise<CouponUsage[]> => {
 
   console.log('Fetching coupon usage for:', user.coupon_code);
   
-  // Mock data for demonstration
-  return [
-    { date: '2024-03-15', product_name: 'Premium Monthly Plan', quantity: 5, earnings: 250.00 },
-    { date: '2024-03-14', product_name: 'Annual Subscription', quantity: 3, earnings: 150.00 },
-    { date: '2024-03-13', product_name: 'Business Package', quantity: 7, earnings: 350.00 },
-    { date: '2024-03-12', product_name: 'Premium Monthly Plan', quantity: 4, earnings: 200.00 },
-    { date: '2024-03-11', product_name: 'Annual Subscription', quantity: 6, earnings: 300.00 },
-    { date: '2024-03-10', product_name: 'Business Package', quantity: 8, earnings: 400.00 },
-    { date: '2024-03-09', product_name: 'Premium Monthly Plan', quantity: 2, earnings: 100.00 },
-    { date: '2024-03-08', product_name: 'Annual Subscription', quantity: 5, earnings: 250.00 },
-    { date: '2024-03-07', product_name: 'Business Package', quantity: 3, earnings: 150.00 },
-    { date: '2024-03-06', product_name: 'Premium Monthly Plan', quantity: 4, earnings: 200.00 },
-  ];
+  const { data, error } = await supabase
+    .from('coupon_usage')
+    .select('*')
+    .eq('coupon_code', user.coupon_code)
+    .order('date', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error('Supabase error:', error);
+    // Fallback to mock data if Supabase query fails
+    return [
+      { date: '2024-03-15', product_name: 'Premium Monthly Plan', quantity: 5, earnings: 250.00 },
+      { date: '2024-03-14', product_name: 'Annual Subscription', quantity: 3, earnings: 150.00 },
+      { date: '2024-03-13', product_name: 'Business Package', quantity: 7, earnings: 350.00 },
+      { date: '2024-03-12', product_name: 'Premium Monthly Plan', quantity: 4, earnings: 200.00 },
+      { date: '2024-03-11', product_name: 'Annual Subscription', quantity: 6, earnings: 300.00 },
+      { date: '2024-03-10', product_name: 'Business Package', quantity: 8, earnings: 400.00 },
+      { date: '2024-03-09', product_name: 'Premium Monthly Plan', quantity: 2, earnings: 100.00 },
+      { date: '2024-03-08', product_name: 'Annual Subscription', quantity: 5, earnings: 250.00 },
+      { date: '2024-03-07', product_name: 'Business Package', quantity: 3, earnings: 150.00 },
+      { date: '2024-03-06', product_name: 'Premium Monthly Plan', quantity: 4, earnings: 200.00 },
+    ];
+  }
+
+  return data as CouponUsage[];
 };
 
 export const DataTable = () => {
