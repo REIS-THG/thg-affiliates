@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -17,11 +16,17 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Bell, Settings } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState<string>("");
   const { toast: uiToast } = useToast();
+  const [bankAccount, setBankAccount] = useState("**** 1234");
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -76,6 +81,11 @@ const Dashboard = () => {
       description: "Successfully logged out",
     });
     navigate('/login');
+  };
+
+  const handleSaveSettings = () => {
+    // In a real app, this would make an API call to save the settings
+    toast.success("Settings saved successfully!");
   };
 
   if (!couponCode) {
@@ -136,30 +146,68 @@ const Dashboard = () => {
                   <Settings className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Account Settings</DialogTitle>
                   <DialogDescription>
                     Manage your affiliate account preferences
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="border-b pb-4">
+                <div className="space-y-6 py-4">
+                  <div className="space-y-2">
                     <h3 className="font-medium">Your Coupon Code</h3>
                     <p className="text-sm text-muted-foreground">{couponCode}</p>
                   </div>
-                  <div className="border-b pb-4">
+                  
+                  <div className="space-y-4">
                     <h3 className="font-medium">Payout Information</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Monthly payouts set to Bank Account ending in **** 1234
-                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="bankAccount">Bank Account Number</Label>
+                      <Input
+                        id="bankAccount"
+                        value={bankAccount}
+                        onChange={(e) => setBankAccount(e.target.value)}
+                        placeholder="Enter bank account number"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        This is where your monthly earnings will be sent
+                      </p>
+                    </div>
                   </div>
-                  <div>
+
+                  <div className="space-y-4">
                     <h3 className="font-medium">Notification Preferences</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Email and push notifications enabled
-                    </p>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Email Notifications</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Receive updates about your earnings via email
+                          </p>
+                        </div>
+                        <Switch
+                          checked={emailNotifications}
+                          onCheckedChange={setEmailNotifications}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Push Notifications</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Get instant updates in your browser
+                          </p>
+                        </div>
+                        <Switch
+                          checked={pushNotifications}
+                          onCheckedChange={setPushNotifications}
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  <Button onClick={handleSaveSettings} className="w-full">
+                    Save Changes
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
