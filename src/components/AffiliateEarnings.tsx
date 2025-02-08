@@ -1,7 +1,6 @@
 
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw } from "lucide-react";
@@ -13,52 +12,16 @@ interface EarningsData {
   total_earnings: number;
 }
 
+const mockEarnings: EarningsData = {
+  earnings_30_days: 1862.00,
+  earnings_this_month: 1274.00,
+  total_earnings: 8945.00
+};
+
 const fetchEarnings = async (): Promise<EarningsData> => {
-  const user = JSON.parse(localStorage.getItem('affiliateUser') || '{}');
-  
-  if (!user.coupon_code) {
-    throw new Error('User not authenticated');
-  }
-
-  console.log('Fetching earnings for user:', user.coupon_code);
-  
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
-  const { data: thirtyDaysData, error: thirtyDaysError } = await supabase
-    .from('coupon_usage')
-    .select('earnings')
-    .eq('coupon_code', user.coupon_code)
-    .gte('date', thirtyDaysAgo.toISOString());
-
-  const { data: monthData, error: monthError } = await supabase
-    .from('coupon_usage')
-    .select('earnings')
-    .eq('coupon_code', user.coupon_code)
-    .gte('date', startOfMonth.toISOString());
-
-  const { data: totalData, error: totalError } = await supabase
-    .from('coupon_usage')
-    .select('earnings')
-    .eq('coupon_code', user.coupon_code);
-
-  if (thirtyDaysError || monthError || totalError) {
-    console.error('Supabase error:', { thirtyDaysError, monthError, totalError });
-    throw new Error('Failed to fetch earnings data');
-  }
-
-  const calculate = (data: any[]) => 
-    data?.reduce((sum, item) => sum + (item.earnings || 0), 0) || 0;
-
-  return {
-    earnings_30_days: calculate(thirtyDaysData),
-    earnings_this_month: calculate(monthData),
-    total_earnings: calculate(totalData)
-  };
+  // Simulating API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockEarnings;
 };
 
 export const AffiliateEarnings = () => {

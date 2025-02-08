@@ -32,37 +32,34 @@ interface CouponUsage {
 
 const ITEMS_PER_PAGE = 10;
 
+// Mock data
+const mockData: CouponUsage[] = [
+  { date: "2024-02-20", product_name: "Premium Course Bundle", quantity: 3, earnings: 147.00 },
+  { date: "2024-02-19", product_name: "Digital Marketing Workshop", quantity: 2, earnings: 98.00 },
+  { date: "2024-02-18", product_name: "SEO Masterclass", quantity: 5, earnings: 245.00 },
+  { date: "2024-02-17", product_name: "Social Media Strategy Course", quantity: 1, earnings: 49.00 },
+  { date: "2024-02-16", product_name: "Content Creation Basics", quantity: 4, earnings: 196.00 },
+  { date: "2024-02-15", product_name: "Email Marketing Guide", quantity: 2, earnings: 98.00 },
+  { date: "2024-02-14", product_name: "Affiliate Marketing 101", quantity: 3, earnings: 147.00 },
+  { date: "2024-02-13", product_name: "Business Analytics Course", quantity: 1, earnings: 49.00 },
+  { date: "2024-02-12", product_name: "WordPress Development", quantity: 2, earnings: 98.00 },
+  { date: "2024-02-11", product_name: "UI/UX Design Fundamentals", quantity: 3, earnings: 147.00 },
+  { date: "2024-02-10", product_name: "JavaScript Bootcamp", quantity: 4, earnings: 196.00 },
+  { date: "2024-02-09", product_name: "Python for Beginners", quantity: 2, earnings: 98.00 },
+  { date: "2024-02-08", product_name: "Data Science Essentials", quantity: 1, earnings: 49.00 },
+  { date: "2024-02-07", product_name: "Mobile App Development", quantity: 3, earnings: 147.00 },
+  { date: "2024-02-06", product_name: "Cloud Computing Basics", quantity: 2, earnings: 98.00 }
+];
+
 const fetchCouponUsage = async (page: number): Promise<{ data: CouponUsage[], count: number }> => {
-  const user = JSON.parse(localStorage.getItem('affiliateUser') || '{}');
+  // Using mock data instead of Supabase
+  const startIndex = page * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedData = mockData.slice(startIndex, endIndex);
   
-  if (!user.coupon_code) {
-    throw new Error('User not authenticated');
-  }
-
-  console.log('Fetching coupon usage for:', user.coupon_code);
-  
-  // Get total count
-  const { count } = await supabase
-    .from('coupon_usage')
-    .select('*', { count: 'exact', head: true })
-    .eq('coupon_code', user.coupon_code);
-
-  // Get paginated data
-  const { data, error } = await supabase
-    .from('coupon_usage')
-    .select('*')
-    .eq('coupon_code', user.coupon_code)
-    .order('date', { ascending: false })
-    .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
-
-  if (error) {
-    console.error('Supabase error:', error);
-    throw error;
-  }
-
-  return { 
-    data: data as CouponUsage[], 
-    count: count || 0 
+  return {
+    data: paginatedData,
+    count: mockData.length
   };
 };
 
