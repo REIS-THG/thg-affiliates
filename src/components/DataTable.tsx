@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -8,27 +9,44 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
-interface CouponData {
+interface CouponUsage {
   date: string;
+  code: string;
   quantity: number;
+  earnings: number;
 }
 
-const fetchCouponData = async (): Promise<CouponData[]> => {
-  // TODO: Implement Square API integration
-  // This is mock data for now
-  return [
-    { date: "2024-01", quantity: 65 },
-    { date: "2024-02", quantity: 85 },
-    { date: "2024-03", quantity: 120 },
-    { date: "2024-04", quantity: 90 },
-  ];
+const fetchCouponUsage = async (): Promise<CouponUsage[]> => {
+  const user = JSON.parse(localStorage.getItem('affiliateUser') || '{}');
+  
+  if (!user.coupon_code) {
+    throw new Error('User not authenticated');
+  }
+
+  console.log('Fetching coupon usage for:', user.coupon_code);
+  
+  const { data, error } = await supabase
+    .from('coupon_usage')
+    .select('*')
+    .eq('code', user.coupon_code)
+    .order('date', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error('Error fetching coupon usage:', error);
+    throw error;
+  }
+
+  return data || [];
 };
 
 export const DataTable = () => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["couponData"],
-    queryFn: fetchCouponData,
+    queryKey: ["couponUsage"],
+    queryFn: fetchCouponUsage,
+    refetchInterval: 30000,
   });
 
   if (isLoading) {
@@ -46,7 +64,7 @@ export const DataTable = () => {
   if (error) {
     return (
       <Card className="w-full p-4">
-        <p className="text-destructive">Error loading data</p>
+        <p className="text-destructive">Error loading data: {error instanceof Error ? error.message : 'Unknown error'}</p>
       </Card>
     );
   }
@@ -57,14 +75,16 @@ export const DataTable = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
-            <TableHead className="text-right">Quantity Used</TableHead>
+            <TableHead className="text-right">Quantity</TableHead>
+            <TableHead className="text-right">Earnings</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data?.map((row) => (
             <TableRow key={row.date}>
-              <TableCell>{row.date}</TableCell>
+              <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
               <TableCell className="text-right">{row.quantity}</TableCell>
+              <TableCell className="text-right">${row.earnings.toFixed(2)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
