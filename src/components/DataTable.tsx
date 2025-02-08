@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/pagination";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface CouponUsage {
   date: string;
@@ -136,8 +137,8 @@ export const DataTable = () => {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                  disabled={currentPage === 0}
+                  onClick={() => currentPage > 0 && setCurrentPage(p => p - 1)}
+                  className={cn(currentPage === 0 && "pointer-events-none opacity-50")}
                 />
               </PaginationItem>
               {Array.from({ length: totalPages }).map((_, i) => (
@@ -152,8 +153,8 @@ export const DataTable = () => {
               ))}
               <PaginationItem>
                 <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                  disabled={currentPage === totalPages - 1}
+                  onClick={() => currentPage < totalPages - 1 && setCurrentPage(p => p + 1)}
+                  className={cn(currentPage === totalPages - 1 && "pointer-events-none opacity-50")}
                 />
               </PaginationItem>
             </PaginationContent>
