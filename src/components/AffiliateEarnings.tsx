@@ -1,7 +1,11 @@
+
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EarningsData {
   earnings_30_days: number;
@@ -25,21 +29,18 @@ const fetchEarnings = async (): Promise<EarningsData> => {
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  // Query for last 30 days earnings
   const { data: thirtyDaysData, error: thirtyDaysError } = await supabase
     .from('coupon_usage')
     .select('earnings')
     .eq('coupon_code', user.coupon_code)
     .gte('date', thirtyDaysAgo.toISOString());
 
-  // Query for this month's earnings
   const { data: monthData, error: monthError } = await supabase
     .from('coupon_usage')
     .select('earnings')
     .eq('coupon_code', user.coupon_code)
     .gte('date', startOfMonth.toISOString());
 
-  // Query for total earnings
   const { data: totalData, error: totalError } = await supabase
     .from('coupon_usage')
     .select('earnings')
@@ -47,12 +48,7 @@ const fetchEarnings = async (): Promise<EarningsData> => {
 
   if (thirtyDaysError || monthError || totalError) {
     console.error('Supabase error:', { thirtyDaysError, monthError, totalError });
-    // Fallback to mock data if queries fail
-    return {
-      earnings_30_days: 3250.00,
-      earnings_this_month: 2780.00,
-      total_earnings: 12450.00
-    };
+    throw new Error('Failed to fetch earnings data');
   }
 
   const calculate = (data: any[]) => 
@@ -67,7 +63,7 @@ const fetchEarnings = async (): Promise<EarningsData> => {
 
 export const AffiliateEarnings = () => {
   const { toast } = useToast();
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["affiliateEarnings"],
     queryFn: fetchEarnings,
     refetchInterval: 30000,
@@ -84,6 +80,14 @@ export const AffiliateEarnings = () => {
     }
   });
 
+  const handleRefresh = () => {
+    refetch();
+    toast({
+      title: "Refreshing data",
+      description: "Getting the latest earnings information...",
+    });
+  };
+
   if (error) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -97,33 +101,45 @@ export const AffiliateEarnings = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-            <div className="h-6 bg-gray-200 rounded w-3/4" />
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground">Earned Last 30 Days</h3>
-        <p className="text-2xl font-bold">${data?.earnings_30_days?.toFixed(2) || '0.00'}</p>
-      </Card>
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground">Earned This Month</h3>
-        <p className="text-2xl font-bold">${data?.earnings_this_month?.toFixed(2) || '0.00'}</p>
-      </Card>
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground">Total Earnings</h3>
-        <p className="text-2xl font-bold">${data?.total_earnings?.toFixed(2) || '0.00'}</p>
-      </Card>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-muted-foreground">Earned Last 30 Days</h3>
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-1" />
+          ) : (
+            <p className="text-2xl font-bold">${data?.earnings_30_days?.toFixed(2) || '0.00'}</p>
+          )}
+        </Card>
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-muted-foreground">Earned This Month</h3>
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-1" />
+          ) : (
+            <p className="text-2xl font-bold">${data?.earnings_this_month?.toFixed(2) || '0.00'}</p>
+          )}
+        </Card>
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-muted-foreground">Total Earnings</h3>
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-1" />
+          ) : (
+            <p className="text-2xl font-bold">${data?.total_earnings?.toFixed(2) || '0.00'}</p>
+          )}
+        </Card>
+      </div>
     </div>
   );
 };

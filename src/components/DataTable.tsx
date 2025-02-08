@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -9,6 +10,17 @@ import {
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CouponUsage {
   date: string;
@@ -17,7 +29,9 @@ interface CouponUsage {
   earnings: number;
 }
 
-const fetchCouponUsage = async (): Promise<CouponUsage[]> => {
+const ITEMS_PER_PAGE = 10;
+
+const fetchCouponUsage = async (page: number): Promise<{ data: CouponUsage[], count: number }> => {
   const user = JSON.parse(localStorage.getItem('affiliateUser') || '{}');
   
   if (!user.coupon_code) {
@@ -26,46 +40,60 @@ const fetchCouponUsage = async (): Promise<CouponUsage[]> => {
 
   console.log('Fetching coupon usage for:', user.coupon_code);
   
+  // Get total count
+  const { count } = await supabase
+    .from('coupon_usage')
+    .select('*', { count: 'exact', head: true })
+    .eq('coupon_code', user.coupon_code);
+
+  // Get paginated data
   const { data, error } = await supabase
     .from('coupon_usage')
     .select('*')
     .eq('coupon_code', user.coupon_code)
     .order('date', { ascending: false })
-    .limit(10);
+    .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
   if (error) {
     console.error('Supabase error:', error);
-    // Fallback to mock data if Supabase query fails
-    return [
-      { date: '2024-03-15', product_name: 'Premium Monthly Plan', quantity: 5, earnings: 250.00 },
-      { date: '2024-03-14', product_name: 'Annual Subscription', quantity: 3, earnings: 150.00 },
-      { date: '2024-03-13', product_name: 'Business Package', quantity: 7, earnings: 350.00 },
-      { date: '2024-03-12', product_name: 'Premium Monthly Plan', quantity: 4, earnings: 200.00 },
-      { date: '2024-03-11', product_name: 'Annual Subscription', quantity: 6, earnings: 300.00 },
-      { date: '2024-03-10', product_name: 'Business Package', quantity: 8, earnings: 400.00 },
-      { date: '2024-03-09', product_name: 'Premium Monthly Plan', quantity: 2, earnings: 100.00 },
-      { date: '2024-03-08', product_name: 'Annual Subscription', quantity: 5, earnings: 250.00 },
-      { date: '2024-03-07', product_name: 'Business Package', quantity: 3, earnings: 150.00 },
-      { date: '2024-03-06', product_name: 'Premium Monthly Plan', quantity: 4, earnings: 200.00 },
-    ];
+    throw error;
   }
 
-  return data as CouponUsage[];
+  return { 
+    data: data as CouponUsage[], 
+    count: count || 0 
+  };
 };
 
 export const DataTable = () => {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["couponUsage"],
-    queryFn: fetchCouponUsage,
+  const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["couponUsage", currentPage],
+    queryFn: () => fetchCouponUsage(currentPage),
     refetchInterval: 30000,
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Error loading data",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
   });
+
+  const totalPages = data ? Math.ceil(data.count / ITEMS_PER_PAGE) : 0;
 
   if (isLoading) {
     return (
       <Card className="w-full relative overflow-hidden">
-        <div className="animate-pulse space-y-4 p-4">
+        <div className="space-y-4 p-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-8 bg-gray-200 rounded" />
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+            </div>
           ))}
         </div>
       </Card>
@@ -92,7 +120,7 @@ export const DataTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data?.map((row, index) => (
+          {data?.data.map((row, index) => (
             <TableRow key={index}>
               <TableCell>{row.product_name}</TableCell>
               <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
@@ -102,6 +130,36 @@ export const DataTable = () => {
           ))}
         </TableBody>
       </Table>
+      {totalPages > 1 && (
+        <div className="py-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                  disabled={currentPage === 0}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(i)}
+                    isActive={currentPage === i}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={currentPage === totalPages - 1}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </Card>
   );
 };
