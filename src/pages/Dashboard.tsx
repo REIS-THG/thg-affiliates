@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -19,13 +20,22 @@ import { Bell, Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState<string>("");
   const { toast: uiToast } = useToast();
-  const [bankAccount, setBankAccount] = useState("**** 1234");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [notificationEmail, setNotificationEmail] = useState("");
   const [pushNotifications, setPushNotifications] = useState(true);
 
   useEffect(() => {
@@ -161,34 +171,59 @@ const Dashboard = () => {
                   
                   <div className="space-y-4">
                     <h3 className="font-medium">Payout Information</h3>
-                    <div className="space-y-2">
-                      <Label htmlFor="bankAccount">Bank Account Number</Label>
-                      <Input
-                        id="bankAccount"
-                        value={bankAccount}
-                        onChange={(e) => setBankAccount(e.target.value)}
-                        placeholder="Enter bank account number"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        This is where your monthly earnings will be sent
-                      </p>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Payment Method</Label>
+                        <Select
+                          value={paymentMethod}
+                          onValueChange={setPaymentMethod}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select payment method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="venmo">Venmo</SelectItem>
+                            <SelectItem value="cashapp">Cashapp</SelectItem>
+                            <SelectItem value="debit">Debit Card Number</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Payment Details</Label>
+                        <Input
+                          value={paymentDetails}
+                          onChange={(e) => setPaymentDetails(e.target.value)}
+                          placeholder="Enter your payment details"
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="font-medium">Notification Preferences</h3>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Email Notifications</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Receive updates about your earnings via email
-                          </p>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Email Notifications</Label>
+                          </div>
+                          <Switch
+                            checked={emailNotifications}
+                            onCheckedChange={setEmailNotifications}
+                          />
                         </div>
-                        <Switch
-                          checked={emailNotifications}
-                          onCheckedChange={setEmailNotifications}
-                        />
+                        {emailNotifications && (
+                          <div className="space-y-2">
+                            <Label>Notification Email</Label>
+                            <Input
+                              type="email"
+                              value={notificationEmail}
+                              onChange={(e) => setNotificationEmail(e.target.value)}
+                              placeholder="Enter your email address"
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
