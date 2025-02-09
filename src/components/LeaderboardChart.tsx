@@ -6,7 +6,11 @@ import { TimeRangeSelector } from "@/components/chart/TimeRangeSelector";
 import { ChartContainer } from "@/components/chart/ChartContainer";
 import type { CouponData } from "@/types/coupon";
 
-export const LeaderboardChart = () => {
+interface LeaderboardChartProps {
+  viewAll?: boolean;
+}
+
+export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => {
   const [timeRange, setTimeRange] = useState<string>("30");
   const { data = [], isLoading, error } = useCouponData(timeRange);
 
@@ -14,7 +18,10 @@ export const LeaderboardChart = () => {
     if (!data || data.length === 0) return [];
     
     try {
-      return data.reduce((acc: CouponData[], coupon) => {
+      // If not viewAll, filter data to only show the current user's data
+      const filteredData = viewAll ? data : data.slice(0, 1);
+      
+      return filteredData.reduce((acc: CouponData[], coupon) => {
         if (!acc.length && coupon.data && coupon.data.length > 0) {
           return coupon.data.map((d) => ({
             date: d.date,
@@ -35,7 +42,7 @@ export const LeaderboardChart = () => {
       console.error('Error processing data:', err);
       return [];
     }
-  }, [data]);
+  }, [data, viewAll]);
 
   if (isLoading) {
     return (
@@ -53,7 +60,7 @@ export const LeaderboardChart = () => {
     );
   }
 
-  const couponCodes = data.map(coupon => coupon.code);
+  const couponCodes = viewAll ? data.map(coupon => coupon.code) : data.slice(0, 1).map(coupon => coupon.code);
 
   return (
     <div className="space-y-4">

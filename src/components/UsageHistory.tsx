@@ -11,7 +11,7 @@ export const UsageHistory = ({ viewAll }: UsageHistoryProps) => {
       <h2 className="text-xl font-semibold mb-4">
         {viewAll ? "All Affiliates" : "Personal"} Usage History
       </h2>
-      <DataTable />
+      <DataTable viewAll={viewAll} />
     </section>
   );
 };

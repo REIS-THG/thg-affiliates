@@ -14,7 +14,7 @@ export const UsageAnalytics = ({ couponCode, viewAll }: UsageAnalyticsProps) => 
         {viewAll ? "All Affiliates" : "Personal"} Usage Analytics
       </h2>
       <Card className="p-6">
-        <LeaderboardChart />
+        <LeaderboardChart viewAll={viewAll} />
       </Card>
     </section>
   );

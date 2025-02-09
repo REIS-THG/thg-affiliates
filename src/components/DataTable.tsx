@@ -25,6 +25,10 @@ import { cn } from "@/lib/utils";
 import { generateMockTableData } from "@/utils/mockDataGenerator";
 import { Badge } from "@/components/ui/badge";
 
+interface DataTableProps {
+  viewAll?: boolean;
+}
+
 interface CouponUsage {
   date: string;
   product_name: string;
@@ -36,17 +40,35 @@ interface CouponUsage {
 
 const ITEMS_PER_PAGE = 10;
 
-const fetchCouponUsage = async (page: number): Promise<{ data: CouponUsage[], count: number }> => {
-  // Using mock data instead of Supabase
-  const mockData = generateMockTableData(30); // Generate 30 days of data
-  const startIndex = page * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedData = mockData.slice(startIndex, endIndex);
-  
-  return {
-    data: paginatedData,
-    count: mockData.length
-  };
+const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data: CouponUsage[], count: number }> => {
+  try {
+    const userStr = localStorage.getItem('affiliateUser');
+    if (!userStr) throw new Error('No user data found');
+    
+    const user = JSON.parse(userStr);
+    
+    // For demo purposes, using mock data
+    // In production, this would be a real Supabase query
+    const mockData = generateMockTableData(30);
+    const startIndex = page * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    
+    // Filter data based on viewAll parameter
+    const filteredData = viewAll ? mockData : mockData.filter(row => 
+      // In production, this would filter based on the user's coupon code
+      Math.random() > 0.5 // Simulating filtering for demo
+    );
+    
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+    
+    return {
+      data: paginatedData,
+      count: filteredData.length
+    };
+  } catch (error) {
+    console.error('Error fetching coupon usage:', error);
+    throw error;
+  }
 };
 
 const getStatusColor = (status: string) => {
@@ -64,13 +86,13 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const DataTable = () => {
+export const DataTable = ({ viewAll = false }: DataTableProps) => {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(0);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["couponUsage", currentPage],
-    queryFn: () => fetchCouponUsage(currentPage),
+    queryKey: ["couponUsage", currentPage, viewAll],
+    queryFn: () => fetchCouponUsage(currentPage, viewAll),
     refetchInterval: 30000,
     meta: {
       onError: (error: Error) => {
