@@ -7,7 +7,7 @@ import { UsageHistory } from "@/components/UsageHistory";
 import { AffiliateEarnings } from "@/components/AffiliateEarnings";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { NotificationsDialog } from "@/components/dashboard/NotificationsDialog";
 import { SettingsDialog } from "@/components/dashboard/SettingsDialog";
 
