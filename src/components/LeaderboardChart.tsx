@@ -12,7 +12,7 @@ interface LeaderboardChartProps {
 
 export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => {
   const [timeRange, setTimeRange] = useState<string>("30");
-  const { data = [], isLoading, error } = useCouponData(timeRange);
+  const { data = [], isLoading, error } = useCouponData(timeRange, viewAll);
 
   const processedData = useMemo(() => {
     if (!data || data.length === 0) return [];

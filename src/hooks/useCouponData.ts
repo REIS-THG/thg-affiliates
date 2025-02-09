@@ -6,9 +6,13 @@ import { getStartDate } from "@/utils/dateUtils";
 import { useEffect } from "react";
 import type { CouponUsage } from "@/types/coupon";
 
-const fetchCouponData = async (days: number): Promise<CouponUsage[]> => {
+const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<CouponUsage[]> => {
   try {
     const startDate = getStartDate(days);
+    const userStr = localStorage.getItem('affiliateUser');
+    if (!userStr) throw new Error('No user data found');
+    
+    const user = JSON.parse(userStr);
     
     const { data: couponData, error } = await supabase
       .from('coupon_usage')
@@ -48,12 +52,12 @@ const fetchCouponData = async (days: number): Promise<CouponUsage[]> => {
   }
 };
 
-export const useCouponData = (timeRange: string) => {
+export const useCouponData = (timeRange: string, viewAll: boolean = false) => {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["couponData", timeRange],
-    queryFn: () => fetchCouponData(parseInt(timeRange)),
+    queryKey: ["couponData", timeRange, viewAll],
+    queryFn: () => fetchCouponData(parseInt(timeRange), viewAll),
     refetchInterval: 30000,
   });
 

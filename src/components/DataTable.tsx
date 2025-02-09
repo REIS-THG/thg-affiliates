@@ -22,7 +22,6 @@ import {
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { generateMockTableData } from "@/utils/mockDataGenerator";
 import { Badge } from "@/components/ui/badge";
 
 interface DataTableProps {
@@ -36,6 +35,7 @@ interface CouponUsage {
   earnings: number;
   order_status: 'pending' | 'processing' | 'completed' | 'cancelled';
   payout_date: string | null;
+  code: string;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -46,24 +46,21 @@ const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data:
     if (!userStr) throw new Error('No user data found');
     
     const user = JSON.parse(userStr);
-    
-    // For demo purposes, using mock data
-    // In production, this would be a real Supabase query
-    const mockData = generateMockTableData(30);
     const startIndex = page * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
     
-    // Filter data based on viewAll parameter
-    const filteredData = viewAll ? mockData : mockData.filter(row => 
-      // In production, this would filter based on the user's coupon code
-      Math.random() > 0.5 // Simulating filtering for demo
-    );
+    const query = supabase
+      .from('coupon_usage')
+      .select('*', { count: 'exact' })
+      .order('date', { ascending: false })
+      .range(startIndex, startIndex + ITEMS_PER_PAGE - 1);
     
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+    const { data, error, count } = await query;
+    
+    if (error) throw error;
     
     return {
-      data: paginatedData,
-      count: filteredData.length
+      data: data as CouponUsage[],
+      count: count || 0
     };
   } catch (error) {
     console.error('Error fetching coupon usage:', error);
