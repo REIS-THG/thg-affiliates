@@ -78,6 +78,30 @@ export type Database = {
         }
         Relationships: []
       }
+      thg_affiliate_admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          last_login: string | null
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_login?: string | null
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_login?: string | null
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
+      }
       THG_Affiliate_Coupon_Use_Time: {
         Row: {
           coupon: string | null

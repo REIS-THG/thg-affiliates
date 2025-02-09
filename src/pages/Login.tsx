@@ -21,13 +21,26 @@ const Login = () => {
     setLoading(true);
     
     try {
-      // Check for default admin login
-      if (couponCode === "THGadmin" && password === "THGadmin") {
-        const adminUser = { 
-          coupon_code: "THGadmin",
+      // Check for admin login first
+      const { data: adminUser, error: adminError } = await supabase
+        .from('THG_Affiliate_Admin_Users')
+        .select('*')
+        .eq('username', couponCode.trim())
+        .eq('password_hash', password.trim())
+        .single();
+
+      if (adminUser) {
+        // Update last login timestamp
+        await supabase
+          .from('THG_Affiliate_Admin_Users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', adminUser.id);
+
+        const userData = { 
+          coupon_code: adminUser.username,
           role: "admin" 
         };
-        localStorage.setItem('affiliateUser', JSON.stringify(adminUser));
+        localStorage.setItem('affiliateUser', JSON.stringify(userData));
         toast({
           title: "Success",
           description: "Successfully logged in as admin",
@@ -36,13 +49,13 @@ const Login = () => {
         return;
       }
       
-      console.log("Attempting login with coupon code:", couponCode);
+      // If not admin, check affiliate users
+      console.log("Attempting affiliate login with coupon code:", couponCode);
       
-      // Query the Affiliate Users table
       const { data: affiliateUser, error } = await supabase
-        .from('Affiliate Users')
+        .from('THG_Affiliate_Users')
         .select('*')
-        .eq('coupon_code', couponCode.trim())
+        .eq('coupon', couponCode.trim())
         .eq('password', password.trim())
         .single();
 
@@ -52,7 +65,7 @@ const Login = () => {
         console.error("Supabase error:", error);
         toast({
           title: "Error",
-          description: error.message,
+          description: "Invalid coupon code or password",
           variant: "destructive",
         });
         return;
