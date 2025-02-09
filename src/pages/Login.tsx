@@ -28,7 +28,7 @@ const Login = () => {
         .select('*')
         .eq('username', couponCode.trim())
         .eq('password_hash', password.trim())
-        .single();
+        .maybeSingle();
 
       console.log("Admin login response:", { adminUser, adminError });
 
@@ -60,19 +60,9 @@ const Login = () => {
         .select('*')
         .eq('coupon', couponCode.trim())
         .eq('password', password.trim())
-        .single();
+        .maybeSingle();
 
       console.log("Login response:", { affiliateUser, error });
-
-      if (error) {
-        console.error("Supabase error:", error);
-        toast({
-          title: "Error",
-          description: "Invalid coupon code or password",
-          variant: "destructive",
-        });
-        return;
-      }
 
       if (affiliateUser) {
         localStorage.setItem('affiliateUser', JSON.stringify(affiliateUser));
