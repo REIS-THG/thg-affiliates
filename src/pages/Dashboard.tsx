@@ -45,7 +45,7 @@ const Dashboard = () => {
         
         // Fetch user preferences from Supabase
         const { data: affiliateUser, error } = await supabase
-          .from('Affiliate Users')
+          .from('THG_Affiliate_Users')
           .select('*')
           .eq('coupon', user.coupon_code)
           .single();
