@@ -1,3 +1,4 @@
+
 export interface AffiliateUser {
   id: string;
   created_at: string;
@@ -5,6 +6,11 @@ export interface AffiliateUser {
   password: string;
   email?: string;
   role?: string;
+  payment_method?: string;
+  payment_details?: string;
+  notification_email?: string;
+  notification_frequency?: 'daily' | 'weekly' | 'monthly';
+  email_notifications?: boolean;
 }
 
 export interface CouponUsage {

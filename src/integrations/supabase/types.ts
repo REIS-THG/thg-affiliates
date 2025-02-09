@@ -34,20 +34,35 @@ export type Database = {
         Row: {
           coupon: string | null
           created_at: string
+          email_notifications: boolean | null
           id: number
+          notification_email: string | null
+          notification_frequency: string | null
           password: string | null
+          payment_details: string | null
+          payment_method: string | null
         }
         Insert: {
           coupon?: string | null
           created_at?: string
+          email_notifications?: boolean | null
           id?: number
+          notification_email?: string | null
+          notification_frequency?: string | null
           password?: string | null
+          payment_details?: string | null
+          payment_method?: string | null
         }
         Update: {
           coupon?: string | null
           created_at?: string
+          email_notifications?: boolean | null
           id?: number
+          notification_email?: string | null
+          notification_frequency?: string | null
           password?: string | null
+          payment_details?: string | null
+          payment_method?: string | null
         }
         Relationships: []
       }

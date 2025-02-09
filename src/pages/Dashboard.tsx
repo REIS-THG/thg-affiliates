@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -6,6 +7,7 @@ import { UsageHistory } from "@/components/UsageHistory";
 import { AffiliateEarnings } from "@/components/AffiliateEarnings";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +40,7 @@ const Dashboard = () => {
   const [notificationFrequency, setNotificationFrequency] = useState("daily");
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const userStr = localStorage.getItem('affiliateUser');
       if (!userStr) {
         uiToast({
@@ -57,17 +59,31 @@ const Dashboard = () => {
         }
         setCouponCode(user.coupon_code);
         
+        // Fetch user preferences from Supabase
+        const { data: affiliateUser, error } = await supabase
+          .from('Affiliate Users')
+          .select('*')
+          .eq('coupon', user.coupon_code)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user preferences:", error);
+          throw error;
+        }
+
+        if (affiliateUser) {
+          setPaymentMethod(affiliateUser.payment_method || '');
+          setPaymentDetails(affiliateUser.payment_details || '');
+          setEmailNotifications(affiliateUser.email_notifications ?? true);
+          setNotificationEmail(affiliateUser.notification_email || '');
+          setNotificationFrequency(affiliateUser.notification_frequency || 'daily');
+        }
+        
         // Show welcome notification
         toast.success("Welcome back!", {
           description: "Your dashboard is ready to view",
         });
         
-        // Show mock notifications
-        setTimeout(() => {
-          toast("New coupon redemption!", {
-            description: "Your code was just used for a $75 purchase",
-          });
-        }, 2000);
       } catch (error) {
         console.error("Error parsing user data:", error);
         localStorage.removeItem('affiliateUser');
@@ -92,9 +108,31 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  const handleSaveSettings = () => {
-    // In a real app, this would make an API call to save the settings
-    toast.success("Settings saved successfully!");
+  const handleSaveSettings = async () => {
+    try {
+      const userStr = localStorage.getItem('affiliateUser');
+      if (!userStr) throw new Error("No user found");
+      
+      const user = JSON.parse(userStr);
+      
+      const { error } = await supabase
+        .from('Affiliate Users')
+        .update({
+          payment_method: paymentMethod,
+          payment_details: paymentDetails,
+          notification_email: notificationEmail,
+          notification_frequency: notificationFrequency,
+          email_notifications: emailNotifications
+        })
+        .eq('coupon', user.coupon_code);
+
+      if (error) throw error;
+
+      toast.success("Settings saved successfully!");
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast.error("Failed to save settings. Please try again.");
+    }
   };
 
   if (!couponCode) {
