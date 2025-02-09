@@ -10,18 +10,22 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { NotificationsDialog } from "@/components/dashboard/NotificationsDialog";
 import { SettingsDialog } from "@/components/dashboard/SettingsDialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast: uiToast } = useToast();
+  const [viewAll, setViewAll] = useState(false);
   const [userSettings, setUserSettings] = useState({
     paymentMethod: "",
     paymentDetails: "",
     emailNotifications: true,
     notificationEmail: "",
-    notificationFrequency: "daily"
+    notificationFrequency: "daily",
+    viewType: "personal"
   });
 
   useEffect(() => {
@@ -64,8 +68,10 @@ const Dashboard = () => {
               paymentDetails: affiliateUser.payment_details || '',
               emailNotifications: affiliateUser.email_notifications ?? true,
               notificationEmail: affiliateUser.notification_email || '',
-              notificationFrequency: affiliateUser.notification_frequency || 'daily'
+              notificationFrequency: affiliateUser.notification_frequency || 'daily',
+              viewType: affiliateUser.view_type || 'personal'
             });
+            setViewAll(affiliateUser.view_type === 'all');
           }
         }
         
@@ -88,6 +94,26 @@ const Dashboard = () => {
 
     checkAuth();
   }, [navigate, uiToast, isAdmin]);
+
+  const handleViewToggle = async (checked: boolean) => {
+    try {
+      const newViewType = checked ? 'all' : 'personal';
+      const { error } = await supabase
+        .from('THG_Affiliate_Users')
+        .update({ view_type: newViewType })
+        .eq('coupon', couponCode);
+
+      if (error) throw error;
+
+      setViewAll(checked);
+      setUserSettings(prev => ({ ...prev, viewType: newViewType }));
+      
+      toast.success(`Switched to ${checked ? 'all affiliates' : 'personal'} view`);
+    } catch (error) {
+      console.error('Error updating view preference:', error);
+      toast.error('Failed to update view preference');
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('affiliateUser');
@@ -113,21 +139,35 @@ const Dashboard = () => {
               {isAdmin ? "Admin Dashboard Overview" : "Track your affiliate performance and earnings"}
             </p>
           </div>
-          <div className="flex gap-2">
-            <NotificationsDialog />
+          <div className="flex items-center gap-4">
             {!isAdmin && (
-              <SettingsDialog 
-                couponCode={couponCode}
-                initialSettings={userSettings}
-              />
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="view-toggle"
+                  checked={viewAll}
+                  onCheckedChange={handleViewToggle}
+                />
+                <Label htmlFor="view-toggle" className="text-sm">
+                  {viewAll ? "All Affiliates" : "Personal View"}
+                </Label>
+              </div>
             )}
+            <div className="flex gap-2">
+              <NotificationsDialog />
+              {!isAdmin && (
+                <SettingsDialog 
+                  couponCode={couponCode}
+                  initialSettings={userSettings}
+                />
+              )}
+            </div>
           </div>
         </div>
         
         <div className="space-y-6">
-          <AffiliateEarnings />
-          <UsageAnalytics couponCode={couponCode} />
-          <UsageHistory />
+          <AffiliateEarnings viewType={viewAll ? 'all' : 'personal'} />
+          <UsageAnalytics couponCode={couponCode} viewAll={viewAll} />
+          <UsageHistory viewAll={viewAll} />
         </div>
       </div>
     </div>

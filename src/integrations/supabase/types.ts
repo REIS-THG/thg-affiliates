@@ -191,6 +191,7 @@ export type Database = {
           password: string | null
           payment_details: string | null
           payment_method: string | null
+          view_type: string | null
         }
         Insert: {
           coupon?: string | null
@@ -202,6 +203,7 @@ export type Database = {
           password?: string | null
           payment_details?: string | null
           payment_method?: string | null
+          view_type?: string | null
         }
         Update: {
           coupon?: string | null
@@ -213,6 +215,7 @@ export type Database = {
           password?: string | null
           payment_details?: string | null
           payment_method?: string | null
+          view_type?: string | null
         }
         Relationships: []
       }
