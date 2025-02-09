@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { authStateChanged } from "../App";
 
 const Login = () => {
   const [couponCode, setCouponCode] = useState("");
@@ -54,6 +55,8 @@ const Login = () => {
           role: "admin" 
         };
         localStorage.setItem('affiliateUser', JSON.stringify(userData));
+        // Trigger auth state change
+        authStateChanged();
         toast({
           title: "Success",
           description: "Successfully logged in as admin",
@@ -80,6 +83,8 @@ const Login = () => {
       if (affiliateData) {
         console.log("Affiliate login successful:", affiliateData);
         localStorage.setItem('affiliateUser', JSON.stringify(affiliateData));
+        // Trigger auth state change
+        authStateChanged();
         toast({
           title: "Success",
           description: "Successfully logged in",

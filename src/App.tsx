@@ -12,24 +12,32 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Create a custom event for auth state changes
+export const authStateChanged = () => {
+  window.dispatchEvent(new Event('auth-state-changed'));
+};
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     // Check for user data in localStorage
-    const userData = localStorage.getItem('affiliateUser');
-    setIsAuthenticated(!!userData);
-
-    // Add event listener for storage changes
-    const handleStorageChange = () => {
+    const checkAuth = () => {
       const userData = localStorage.getItem('affiliateUser');
       setIsAuthenticated(!!userData);
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    // Initial check
+    checkAuth();
+
+    // Listen for our custom event
+    window.addEventListener('auth-state-changed', checkAuth);
+    // Also listen for storage events (other tabs)
+    window.addEventListener('storage', checkAuth);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-state-changed', checkAuth);
+      window.removeEventListener('storage', checkAuth);
     };
   }, []);
 
