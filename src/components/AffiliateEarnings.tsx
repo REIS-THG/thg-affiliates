@@ -6,6 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface AffiliateEarningsProps {
+  viewType: 'personal' | 'all';
+}
+
 interface EarningsData {
   earnings_30_days: number;
   earnings_this_month: number;
@@ -24,10 +28,10 @@ const fetchEarnings = async (): Promise<EarningsData> => {
   return mockEarnings;
 };
 
-export const AffiliateEarnings = () => {
+export const AffiliateEarnings = ({ viewType }: AffiliateEarningsProps) => {
   const { toast } = useToast();
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["affiliateEarnings"],
+    queryKey: ["affiliateEarnings", viewType],
     queryFn: fetchEarnings,
     refetchInterval: 30000,
     retry: 1,
