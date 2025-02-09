@@ -128,7 +128,7 @@ export const SettingsDialog = ({ couponCode, initialSettings }: SettingsDialogPr
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-background/95">
         <DialogHeader>
           <DialogTitle>Account Settings</DialogTitle>
           <DialogDescription>
@@ -190,13 +190,13 @@ export const SettingsDialog = ({ couponCode, initialSettings }: SettingsDialogPr
                   value={paymentMethod}
                   onValueChange={setPaymentMethod}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background/95">
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background/95">
                     <SelectItem value="venmo">Venmo</SelectItem>
                     <SelectItem value="cashapp">Cashapp</SelectItem>
-                    <SelectItem value="debit">Debit Card Number</SelectItem>
+                    <SelectItem value="ach">Account Number (ACH)</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -242,10 +242,10 @@ export const SettingsDialog = ({ couponCode, initialSettings }: SettingsDialogPr
                         value={notificationFrequency}
                         onValueChange={setNotificationFrequency}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-background/95">
                           <SelectValue placeholder="Select frequency" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-background/95">
                           <SelectItem value="daily">Daily</SelectItem>
                           <SelectItem value="weekly">Weekly</SelectItem>
                           <SelectItem value="monthly">Monthly</SelectItem>

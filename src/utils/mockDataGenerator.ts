@@ -23,6 +23,8 @@ export const AFFILIATE_CODES = [
   { code: 'ALEX30', commission: 0.28, password: 'demo123' }
 ];
 
+const ORDER_STATUSES = ['pending', 'processing', 'completed', 'cancelled'] as const;
+
 const generateDailyData = (date: string, affiliateCode: string, commission: number) => {
   // Generate 1-3 purchases per day
   const numberOfPurchases = Math.floor(Math.random() * 3) + 1;
@@ -88,11 +90,17 @@ export const generateMockTableData = (days: number = 15) => {
   const data = [];
   for (let i = 0; i < days; i++) {
     const product = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+    const status = ORDER_STATUSES[Math.floor(Math.random() * ORDER_STATUSES.length)];
+    const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
+    const payoutDate = status === 'completed' ? format(subDays(new Date(), i - 7), 'yyyy-MM-dd') : null;
+    
     data.push({
-      date: format(subDays(new Date(), i), 'yyyy-MM-dd'),
+      date,
       product_name: product.name,
       quantity: Math.floor(Math.random() * 3) + 1,
-      earnings: Number((product.basePrice * 0.25).toFixed(2))
+      earnings: Number((product.basePrice * 0.25).toFixed(2)),
+      order_status: status,
+      payout_date: payoutDate
     });
   }
   return data;

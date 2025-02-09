@@ -23,12 +23,15 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { generateMockTableData } from "@/utils/mockDataGenerator";
+import { Badge } from "@/components/ui/badge";
 
 interface CouponUsage {
   date: string;
   product_name: string;
   quantity: number;
   earnings: number;
+  order_status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  payout_date: string | null;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -44,6 +47,21 @@ const fetchCouponUsage = async (page: number): Promise<{ data: CouponUsage[], co
     data: paginatedData,
     count: mockData.length
   };
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-500/20 text-green-700';
+    case 'pending':
+      return 'bg-yellow-500/20 text-yellow-700';
+    case 'processing':
+      return 'bg-blue-500/20 text-blue-700';
+    case 'cancelled':
+      return 'bg-red-500/20 text-red-700';
+    default:
+      return 'bg-gray-500/20 text-gray-700';
+  }
 };
 
 export const DataTable = () => {
@@ -96,6 +114,8 @@ export const DataTable = () => {
           <TableRow>
             <TableHead>Product Name</TableHead>
             <TableHead>Purchase Date</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Payout Date</TableHead>
             <TableHead className="text-right">Qty Purchased</TableHead>
             <TableHead className="text-right">Earnings/Purchase</TableHead>
           </TableRow>
@@ -105,6 +125,14 @@ export const DataTable = () => {
             <TableRow key={index}>
               <TableCell className="font-medium">{row.product_name}</TableCell>
               <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <Badge className={cn("capitalize", getStatusColor(row.order_status))}>
+                  {row.order_status}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {row.payout_date ? new Date(row.payout_date).toLocaleDateString() : 'Pending'}
+              </TableCell>
               <TableCell className="text-right">{row.quantity}</TableCell>
               <TableCell className="text-right">${row.earnings.toFixed(2)}</TableCell>
             </TableRow>
