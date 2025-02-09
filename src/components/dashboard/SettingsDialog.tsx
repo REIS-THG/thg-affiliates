@@ -12,16 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { PasswordSection } from "./settings/PasswordSection";
+import { PayoutSection } from "./settings/PayoutSection";
+import { NotificationSection } from "./settings/NotificationSection";
 
 interface SettingsDialogProps {
   couponCode: string;
@@ -40,10 +33,6 @@ export const SettingsDialog = ({ couponCode, initialSettings }: SettingsDialogPr
   const [emailNotifications, setEmailNotifications] = useState(initialSettings.emailNotifications);
   const [notificationEmail, setNotificationEmail] = useState(initialSettings.notificationEmail);
   const [notificationFrequency, setNotificationFrequency] = useState(initialSettings.notificationFrequency);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handleSaveSettings = async () => {
     try {
@@ -67,60 +56,6 @@ export const SettingsDialog = ({ couponCode, initialSettings }: SettingsDialogPr
     }
   };
 
-  const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords don't match!");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long");
-      return;
-    }
-
-    setIsChangingPassword(true);
-    try {
-      // Verify current password
-      const { data: user, error: verifyError } = await supabase
-        .from('THG_Affiliate_Users')
-        .select('*')
-        .eq('coupon', couponCode)
-        .eq('password', currentPassword)
-        .maybeSingle();
-
-      if (verifyError || !user) {
-        toast.error("Current password is incorrect");
-        return;
-      }
-
-      // Update password
-      const { error: updateError } = await supabase
-        .from('THG_Affiliate_Users')
-        .update({ password: newPassword })
-        .eq('coupon', couponCode);
-
-      if (updateError) throw updateError;
-
-      // Log password change
-      await supabase
-        .from('password_change_history')
-        .insert({
-          coupon_code: couponCode,
-          changed_by: couponCode
-        });
-
-      toast.success("Password updated successfully!");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error) {
-      console.error("Error changing password:", error);
-      toast.error("Failed to change password. Please try again.");
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -141,122 +76,23 @@ export const SettingsDialog = ({ couponCode, initialSettings }: SettingsDialogPr
             <p className="text-sm text-muted-foreground">{couponCode}</p>
           </div>
           
-          <div className="space-y-4">
-            <h3 className="font-medium">Change Password</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Current Password</Label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>New Password</Label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Confirm New Password</Label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                />
-              </div>
-              <Button 
-                onClick={handleChangePassword}
-                disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
-                className="w-full"
-              >
-                {isChangingPassword ? "Changing Password..." : "Change Password"}
-              </Button>
-            </div>
-          </div>
+          <PasswordSection couponCode={couponCode} />
 
-          <div className="space-y-4">
-            <h3 className="font-medium">Payout Information</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Payment Method</Label>
-                <Select
-                  value={paymentMethod}
-                  onValueChange={setPaymentMethod}
-                >
-                  <SelectTrigger className="bg-background/95">
-                    <SelectValue placeholder="Select payment method" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background/95">
-                    <SelectItem value="venmo">Venmo</SelectItem>
-                    <SelectItem value="cashapp">Cashapp</SelectItem>
-                    <SelectItem value="ach">Account Number (ACH)</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Payment Details</Label>
-                <Input
-                  value={paymentDetails}
-                  onChange={(e) => setPaymentDetails(e.target.value)}
-                  placeholder="Enter your payment details"
-                />
-              </div>
-            </div>
-          </div>
+          <PayoutSection
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            paymentDetails={paymentDetails}
+            setPaymentDetails={setPaymentDetails}
+          />
 
-          <div className="space-y-4">
-            <h3 className="font-medium">Notification Preferences</h3>
-            <div className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Email Notifications</Label>
-                  </div>
-                  <Switch
-                    checked={emailNotifications}
-                    onCheckedChange={setEmailNotifications}
-                  />
-                </div>
-                {emailNotifications && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>Notification Email</Label>
-                      <Input
-                        type="email"
-                        value={notificationEmail}
-                        onChange={(e) => setNotificationEmail(e.target.value)}
-                        placeholder="Enter your email address"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Notification Frequency</Label>
-                      <Select
-                        value={notificationFrequency}
-                        onValueChange={setNotificationFrequency}
-                      >
-                        <SelectTrigger className="bg-background/95">
-                          <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background/95">
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+          <NotificationSection
+            emailNotifications={emailNotifications}
+            setEmailNotifications={setEmailNotifications}
+            notificationEmail={notificationEmail}
+            setNotificationEmail={setNotificationEmail}
+            notificationFrequency={notificationFrequency}
+            setNotificationFrequency={setNotificationFrequency}
+          />
 
           <Button onClick={handleSaveSettings} className="w-full">
             Save Changes
