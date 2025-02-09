@@ -16,6 +16,8 @@ export type Database = {
           date: string
           earnings: number | null
           id: string
+          order_status: string | null
+          payout_date: string | null
           quantity: number | null
         }
         Insert: {
@@ -24,6 +26,8 @@ export type Database = {
           date: string
           earnings?: number | null
           id?: string
+          order_status?: string | null
+          payout_date?: string | null
           quantity?: number | null
         }
         Update: {
@@ -32,6 +36,8 @@ export type Database = {
           date?: string
           earnings?: number | null
           id?: string
+          order_status?: string | null
+          payout_date?: string | null
           quantity?: number | null
         }
         Relationships: []
