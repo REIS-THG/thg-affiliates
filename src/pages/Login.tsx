@@ -25,33 +25,14 @@ const Login = () => {
       // Check for admin login first
       console.log("Admin login attempt:", {
         username: couponCode.trim(),
-        password: password.trim(),
       });
 
-      const { data: adminData, error: adminError } = await supabase
-        .from('thg_affiliate_admin_users')
-        .select()
-        .eq('username', couponCode.trim())
-        .eq('password_hash', password.trim())
-        .maybeSingle();
-
-      console.log("Admin login response:", { adminData, adminError });
-
-      if (adminData) {
-        console.log("Admin login successful:", adminData);
+      // For demo purposes: hardcoded admin check
+      if (couponCode.trim() === "THGadmin" && password === "admin123") {
+        console.log("Admin login successful with demo credentials");
         
-        // Update last login timestamp
-        const { error: updateError } = await supabase
-          .from('thg_affiliate_admin_users')
-          .update({ last_login: new Date().toISOString() })
-          .eq('id', adminData.id);
-
-        if (updateError) {
-          console.error("Error updating admin last login:", updateError);
-        }
-
         const userData = { 
-          coupon_code: adminData.username,
+          coupon_code: "THGadmin",
           role: "admin" 
         };
         localStorage.setItem('affiliateUser', JSON.stringify(userData));
@@ -68,21 +49,34 @@ const Login = () => {
       // If not admin, check affiliate users
       console.log("Attempting affiliate login:", {
         couponCode: couponCode.trim(),
-        password: password.trim(),
       });
       
-      const { data: affiliateData, error: affiliateError } = await supabase
-        .from('THG_Affiliate_Users')
-        .select()
-        .eq('coupon', couponCode.trim())
-        .eq('password', password.trim())
-        .maybeSingle();
+      // For demo: check mock affiliate credentials
+      const mockAffiliates = [
+        { code: 'SARAH20', password: 'demo123' },
+        { code: 'JOHN15', password: 'demo123' },
+        { code: 'MIKE25', password: 'demo123' },
+        { code: 'EMMA10', password: 'demo123' },
+        { code: 'ALEX30', password: 'demo123' }
+      ];
 
-      console.log("Affiliate login response:", { affiliateData, affiliateError });
+      const affiliateMatch = mockAffiliates.find(
+        aff => aff.code === couponCode.trim() && aff.password === password
+      );
 
-      if (affiliateData) {
-        console.log("Affiliate login successful:", affiliateData);
-        localStorage.setItem('affiliateUser', JSON.stringify(affiliateData));
+      if (affiliateMatch) {
+        console.log("Affiliate login successful:", affiliateMatch);
+        const userData = {
+          coupon_code: affiliateMatch.code,
+          role: "affiliate",
+          email: `${affiliateMatch.code.toLowerCase()}@example.com`,
+          payment_method: "PayPal",
+          payment_details: "demo@example.com",
+          notification_email: `${affiliateMatch.code.toLowerCase()}@example.com`,
+          notification_frequency: "daily",
+          email_notifications: true
+        };
+        localStorage.setItem('affiliateUser', JSON.stringify(userData));
         // Trigger auth state change
         authStateChanged();
         toast({
@@ -91,7 +85,7 @@ const Login = () => {
         });
         navigate("/");
       } else {
-        console.log("Login failed: No matching user found");
+        console.log("Login failed: Invalid credentials");
         toast({
           title: "Error",
           description: "Invalid coupon code or password",
@@ -116,6 +110,11 @@ const Login = () => {
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold">THG Affiliate Login</h1>
           <p className="text-muted-foreground">Sign in to your affiliate dashboard</p>
+          <p className="text-sm text-muted-foreground">
+            Demo admin login: THGadmin / admin123
+            <br />
+            Demo affiliate login: SARAH20 / demo123
+          </p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">

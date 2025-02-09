@@ -15,12 +15,12 @@ const PRODUCTS = [
   { name: 'UI/UX Design Fundamentals', basePrice: 49 }
 ];
 
-const AFFILIATE_CODES = [
-  { code: 'SARAH20', commission: 0.25 },
-  { code: 'JOHN15', commission: 0.20 },
-  { code: 'MIKE25', commission: 0.30 },
-  { code: 'EMMA10', commission: 0.22 },
-  { code: 'ALEX30', commission: 0.28 }
+export const AFFILIATE_CODES = [
+  { code: 'SARAH20', commission: 0.25, password: 'demo123' },
+  { code: 'JOHN15', commission: 0.20, password: 'demo123' },
+  { code: 'MIKE25', commission: 0.30, password: 'demo123' },
+  { code: 'EMMA10', commission: 0.22, password: 'demo123' },
+  { code: 'ALEX30', commission: 0.28, password: 'demo123' }
 ];
 
 const generateDailyData = (date: string, affiliateCode: string, commission: number) => {
@@ -73,7 +73,7 @@ export const generateMockData = (days: number): CouponUsage[] => {
 export const generateMockUser = (couponCode: string) => {
   return {
     coupon_code: couponCode,
-    role: Math.random() > 0.9 ? "admin" : "affiliate", // 10% chance of being admin
+    role: couponCode === 'THGadmin' ? "admin" : "affiliate",
     email: `${couponCode.toLowerCase()}@example.com`,
     payment_method: "PayPal",
     payment_details: "demo@example.com",
