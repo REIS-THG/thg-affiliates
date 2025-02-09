@@ -29,10 +29,10 @@ const Login = () => {
 
       const { data: adminData, error: adminError } = await supabase
         .from('thg_affiliate_admin_users')
-        .select('*')
+        .select()
         .eq('username', couponCode.trim())
         .eq('password_hash', password.trim())
-        .single();
+        .maybeSingle();
 
       console.log("Admin login response:", { adminData, adminError });
 
@@ -70,10 +70,10 @@ const Login = () => {
       
       const { data: affiliateData, error: affiliateError } = await supabase
         .from('THG_Affiliate_Users')
-        .select('*')
+        .select()
         .eq('coupon', couponCode.trim())
         .eq('password', password.trim())
-        .single();
+        .maybeSingle();
 
       console.log("Affiliate login response:", { affiliateData, affiliateError });
 
