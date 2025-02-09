@@ -22,17 +22,20 @@ const Login = () => {
     
     try {
       // Check for admin login first
+      console.log("Attempting admin login with username:", couponCode);
       const { data: adminUser, error: adminError } = await supabase
-        .from('THG_Affiliate_Admin_Users')
+        .from('thg_affiliate_admin_users')
         .select('*')
         .eq('username', couponCode.trim())
         .eq('password_hash', password.trim())
         .single();
 
+      console.log("Admin login response:", { adminUser, adminError });
+
       if (adminUser) {
         // Update last login timestamp
         await supabase
-          .from('THG_Affiliate_Admin_Users')
+          .from('thg_affiliate_admin_users')
           .update({ last_login: new Date().toISOString() })
           .eq('id', adminUser.id);
 
