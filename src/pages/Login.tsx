@@ -24,7 +24,7 @@ const Login = () => {
       // Check for admin login first
       console.log("Admin login attempt:", {
         username: couponCode.trim(),
-        passwordLength: password.trim().length
+        password: password.trim(),
       });
 
       const { data: adminData, error: adminError } = await supabase
@@ -32,7 +32,7 @@ const Login = () => {
         .select('*')
         .eq('username', couponCode.trim())
         .eq('password_hash', password.trim())
-        .maybeSingle();
+        .single();
 
       console.log("Admin login response:", { adminData, adminError });
 
@@ -65,7 +65,7 @@ const Login = () => {
       // If not admin, check affiliate users
       console.log("Attempting affiliate login:", {
         couponCode: couponCode.trim(),
-        passwordLength: password.trim().length
+        password: password.trim(),
       });
       
       const { data: affiliateData, error: affiliateError } = await supabase
@@ -73,7 +73,7 @@ const Login = () => {
         .select('*')
         .eq('coupon', couponCode.trim())
         .eq('password', password.trim())
-        .maybeSingle();
+        .single();
 
       console.log("Affiliate login response:", { affiliateData, affiliateError });
 
