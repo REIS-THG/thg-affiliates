@@ -22,7 +22,11 @@ const Login = () => {
     
     try {
       // Check for admin login first
-      console.log("Attempting admin login with username:", couponCode);
+      console.log("Admin login attempt:", {
+        username: couponCode.trim(),
+        passwordLength: password.trim().length
+      });
+
       const { data: adminData, error: adminError } = await supabase
         .from('thg_affiliate_admin_users')
         .select('*')
@@ -33,11 +37,17 @@ const Login = () => {
       console.log("Admin login response:", { adminData, adminError });
 
       if (adminData) {
+        console.log("Admin login successful:", adminData);
+        
         // Update last login timestamp
-        await supabase
+        const { error: updateError } = await supabase
           .from('thg_affiliate_admin_users')
           .update({ last_login: new Date().toISOString() })
           .eq('id', adminData.id);
+
+        if (updateError) {
+          console.error("Error updating admin last login:", updateError);
+        }
 
         const userData = { 
           coupon_code: adminData.username,
@@ -53,7 +63,10 @@ const Login = () => {
       }
       
       // If not admin, check affiliate users
-      console.log("Attempting affiliate login with coupon code:", couponCode);
+      console.log("Attempting affiliate login:", {
+        couponCode: couponCode.trim(),
+        passwordLength: password.trim().length
+      });
       
       const { data: affiliateData, error: affiliateError } = await supabase
         .from('THG_Affiliate_Users')
@@ -65,6 +78,7 @@ const Login = () => {
       console.log("Affiliate login response:", { affiliateData, affiliateError });
 
       if (affiliateData) {
+        console.log("Affiliate login successful:", affiliateData);
         localStorage.setItem('affiliateUser', JSON.stringify(affiliateData));
         toast({
           title: "Success",
@@ -72,6 +86,7 @@ const Login = () => {
         });
         navigate("/");
       } else {
+        console.log("Login failed: No matching user found");
         toast({
           title: "Error",
           description: "Invalid coupon code or password",
