@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -36,7 +35,7 @@ const Dashboard = () => {
   const [paymentDetails, setPaymentDetails] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [notificationEmail, setNotificationEmail] = useState("");
-  const [pushNotifications, setPushNotifications] = useState(true);
+  const [notificationFrequency, setNotificationFrequency] = useState("daily");
 
   useEffect(() => {
     const checkAuth = () => {
@@ -214,28 +213,34 @@ const Dashboard = () => {
                           />
                         </div>
                         {emailNotifications && (
-                          <div className="space-y-2">
-                            <Label>Notification Email</Label>
-                            <Input
-                              type="email"
-                              value={notificationEmail}
-                              onChange={(e) => setNotificationEmail(e.target.value)}
-                              placeholder="Enter your email address"
-                            />
-                          </div>
+                          <>
+                            <div className="space-y-2">
+                              <Label>Notification Email</Label>
+                              <Input
+                                type="email"
+                                value={notificationEmail}
+                                onChange={(e) => setNotificationEmail(e.target.value)}
+                                placeholder="Enter your email address"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Notification Frequency</Label>
+                              <Select
+                                value={notificationFrequency}
+                                onValueChange={setNotificationFrequency}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select frequency" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="daily">Daily</SelectItem>
+                                  <SelectItem value="weekly">Weekly</SelectItem>
+                                  <SelectItem value="monthly">Monthly</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </>
                         )}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label>Push Notifications</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Get instant updates in your browser
-                          </p>
-                        </div>
-                        <Switch
-                          checked={pushNotifications}
-                          onCheckedChange={setPushNotifications}
-                        />
                       </div>
                     </div>
                   </div>
