@@ -14,6 +14,7 @@ import { SettingsDialog } from "@/components/dashboard/SettingsDialog";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast: uiToast } = useToast();
   const [userSettings, setUserSettings] = useState({
     paymentMethod: "",
@@ -42,32 +43,35 @@ const Dashboard = () => {
           throw new Error("Invalid user data");
         }
         setCouponCode(user.coupon_code);
+        setIsAdmin(user.role === "admin");
         
-        // Fetch user preferences from Supabase
-        const { data: affiliateUser, error } = await supabase
-          .from('THG_Affiliate_Users')
-          .select('*')
-          .eq('coupon', user.coupon_code)
-          .single();
+        // Only fetch affiliate preferences if not an admin
+        if (!isAdmin) {
+          const { data: affiliateUser, error } = await supabase
+            .from('THG_Affiliate_Users')
+            .select('*')
+            .eq('coupon', user.coupon_code)
+            .maybeSingle();
 
-        if (error) {
-          console.error("Error fetching user preferences:", error);
-          throw error;
-        }
+          if (error) {
+            console.error("Error fetching user preferences:", error);
+            throw error;
+          }
 
-        if (affiliateUser) {
-          setUserSettings({
-            paymentMethod: affiliateUser.payment_method || '',
-            paymentDetails: affiliateUser.payment_details || '',
-            emailNotifications: affiliateUser.email_notifications ?? true,
-            notificationEmail: affiliateUser.notification_email || '',
-            notificationFrequency: affiliateUser.notification_frequency || 'daily'
-          });
+          if (affiliateUser) {
+            setUserSettings({
+              paymentMethod: affiliateUser.payment_method || '',
+              paymentDetails: affiliateUser.payment_details || '',
+              emailNotifications: affiliateUser.email_notifications ?? true,
+              notificationEmail: affiliateUser.notification_email || '',
+              notificationFrequency: affiliateUser.notification_frequency || 'daily'
+            });
+          }
         }
         
         // Show welcome notification
         toast.success("Welcome back!", {
-          description: "Your dashboard is ready to view",
+          description: isAdmin ? "Admin dashboard is ready" : "Your dashboard is ready to view",
         });
         
       } catch (error) {
@@ -83,7 +87,7 @@ const Dashboard = () => {
     };
 
     checkAuth();
-  }, [navigate, uiToast]);
+  }, [navigate, uiToast, isAdmin]);
 
   const handleLogout = () => {
     localStorage.removeItem('affiliateUser');
@@ -106,15 +110,17 @@ const Dashboard = () => {
           <div className="space-y-2">
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">
-              Track your affiliate performance and earnings
+              {isAdmin ? "Admin Dashboard Overview" : "Track your affiliate performance and earnings"}
             </p>
           </div>
           <div className="flex gap-2">
             <NotificationsDialog />
-            <SettingsDialog 
-              couponCode={couponCode}
-              initialSettings={userSettings}
-            />
+            {!isAdmin && (
+              <SettingsDialog 
+                couponCode={couponCode}
+                initialSettings={userSettings}
+              />
+            )}
           </div>
         </div>
         
