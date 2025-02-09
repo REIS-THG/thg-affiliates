@@ -57,6 +57,27 @@ export type Database = {
         }
         Relationships: []
       }
+      password_change_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string
+          coupon_code: string
+          id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by: string
+          coupon_code: string
+          id?: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string
+          coupon_code?: string
+          id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

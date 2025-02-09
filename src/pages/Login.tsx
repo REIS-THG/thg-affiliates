@@ -23,24 +23,24 @@ const Login = () => {
     try {
       // Check for admin login first
       console.log("Attempting admin login with username:", couponCode);
-      const { data: adminUser, error: adminError } = await supabase
+      const { data: adminData, error: adminError } = await supabase
         .from('thg_affiliate_admin_users')
         .select('*')
         .eq('username', couponCode.trim())
         .eq('password_hash', password.trim())
         .maybeSingle();
 
-      console.log("Admin login response:", { adminUser, adminError });
+      console.log("Admin login response:", { adminData, adminError });
 
-      if (adminUser) {
+      if (adminData) {
         // Update last login timestamp
         await supabase
           .from('thg_affiliate_admin_users')
           .update({ last_login: new Date().toISOString() })
-          .eq('id', adminUser.id);
+          .eq('id', adminData.id);
 
         const userData = { 
-          coupon_code: adminUser.username,
+          coupon_code: adminData.username,
           role: "admin" 
         };
         localStorage.setItem('affiliateUser', JSON.stringify(userData));
@@ -55,17 +55,17 @@ const Login = () => {
       // If not admin, check affiliate users
       console.log("Attempting affiliate login with coupon code:", couponCode);
       
-      const { data: affiliateUser, error } = await supabase
+      const { data: affiliateData, error: affiliateError } = await supabase
         .from('THG_Affiliate_Users')
         .select('*')
         .eq('coupon', couponCode.trim())
         .eq('password', password.trim())
         .maybeSingle();
 
-      console.log("Login response:", { affiliateUser, error });
+      console.log("Affiliate login response:", { affiliateData, affiliateError });
 
-      if (affiliateUser) {
-        localStorage.setItem('affiliateUser', JSON.stringify(affiliateUser));
+      if (affiliateData) {
+        localStorage.setItem('affiliateUser', JSON.stringify(affiliateData));
         toast({
           title: "Success",
           description: "Successfully logged in",
