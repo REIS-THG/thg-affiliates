@@ -180,6 +180,27 @@ export type Database = {
         }
         Relationships: []
       }
+      thg_affiliate_users: {
+        Row: {
+          coupon: string
+          created_at: string
+          id: string
+          view_type: string | null
+        }
+        Insert: {
+          coupon: string
+          created_at?: string
+          id?: string
+          view_type?: string | null
+        }
+        Update: {
+          coupon?: string
+          created_at?: string
+          id?: string
+          view_type?: string | null
+        }
+        Relationships: []
+      }
       THG_Affiliate_Users: {
         Row: {
           coupon: string | null
