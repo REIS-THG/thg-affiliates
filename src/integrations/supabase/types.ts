@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      coupon_usage: {
+        Row: {
+          code: string
+          created_at: string
+          date: string
+          earnings: number | null
+          id: string
+          quantity: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          date: string
+          earnings?: number | null
+          id?: string
+          quantity?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          date?: string
+          earnings?: number | null
+          id?: string
+          quantity?: number | null
+        }
+        Relationships: []
+      }
       "Forgotten Password requests": {
         Row: {
           Affiliate: boolean | null
