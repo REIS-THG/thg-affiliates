@@ -9,28 +9,100 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_login: {
+      "Forgotten Password requests": {
         Row: {
+          Affiliate: boolean | null
+          "Coupon Code": string | null
           created_at: string
-          email: string
-          id: string
-          password: string
+          id: number
+          requestid: string | null
+          "THGrow User": boolean | null
+          THGrow_pword: string | null
         }
         Insert: {
+          Affiliate?: boolean | null
+          "Coupon Code"?: string | null
           created_at?: string
-          email: string
-          id?: string
-          password: string
+          id?: number
+          requestid?: string | null
+          "THGrow User"?: boolean | null
+          THGrow_pword?: string | null
         }
         Update: {
+          Affiliate?: boolean | null
+          "Coupon Code"?: string | null
           created_at?: string
-          email?: string
-          id?: string
-          password?: string
+          id?: number
+          requestid?: string | null
+          "THGrow User"?: boolean | null
+          THGrow_pword?: string | null
         }
         Relationships: []
       }
-      "Affiliate Users": {
+      Keys: {
+        Row: {
+          access_token: string | null
+          application_id: string | null
+          Platform: string
+        }
+        Insert: {
+          access_token?: string | null
+          application_id?: string | null
+          Platform: string
+        }
+        Update: {
+          access_token?: string | null
+          application_id?: string | null
+          Platform?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      THG_Affiliate_Coupon_Use_Time: {
+        Row: {
+          coupon: string | null
+          created_at: string
+          "Final Purchase Price": number | null
+          id: number
+          week_used: string | null
+        }
+        Insert: {
+          coupon?: string | null
+          created_at?: string
+          "Final Purchase Price"?: number | null
+          id?: number
+          week_used?: string | null
+        }
+        Update: {
+          coupon?: string | null
+          created_at?: string
+          "Final Purchase Price"?: number | null
+          id?: number
+          week_used?: string | null
+        }
+        Relationships: []
+      }
+      THG_Affiliate_Users: {
         Row: {
           coupon: string | null
           created_at: string
@@ -66,143 +138,24 @@ export type Database = {
         }
         Relationships: []
       }
-      "Coupon Use & Time": {
-        Row: {
-          coupon: string | null
-          created_at: string
-          "Final Purchase Price": number | null
-          id: number
-          week_used: string | null
-        }
-        Insert: {
-          coupon?: string | null
-          created_at?: string
-          "Final Purchase Price"?: number | null
-          id?: number
-          week_used?: string | null
-        }
-        Update: {
-          coupon?: string | null
-          created_at?: string
-          "Final Purchase Price"?: number | null
-          id?: number
-          week_used?: string | null
-        }
-        Relationships: []
-      }
-      "Forgotten Password requests": {
+      THGrow_admin_login: {
         Row: {
           created_at: string
-          id: number
-          requestid: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          requestid?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          requestid?: string | null
-        }
-        Relationships: []
-      }
-      journal_entries: {
-        Row: {
-          content: string | null
-          created_at: string
+          email: string
           id: string
-          user_id: string | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string
-          id?: string
-          user_id?: string | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string
-          id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "journal_entries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      Keys: {
-        Row: {
-          access_token: string | null
-          application_id: string | null
-          Platform: string
-        }
-        Insert: {
-          access_token?: string | null
-          application_id?: string | null
-          Platform: string
-        }
-        Update: {
-          access_token?: string | null
-          application_id?: string | null
-          Platform?: string
-        }
-        Relationships: []
-      }
-      partners: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          image: string | null
-          link: string | null
-          name: string
-          order: number
+          password: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
+          email: string
           id?: string
-          image?: string | null
-          link?: string | null
-          name: string
-          order: number
+          password: string
         }
         Update: {
           created_at?: string
-          description?: string | null
+          email?: string
           id?: string
-          image?: string | null
-          link?: string | null
-          name?: string
-          order?: number
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          full_name: string | null
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          full_name?: string | null
-          id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          full_name?: string | null
-          id?: string
-          updated_at?: string
+          password?: string
         }
         Relationships: []
       }
@@ -230,6 +183,65 @@ export type Database = {
           id?: number
           in_out?: string | null
           phone?: string | null
+        }
+        Relationships: []
+      }
+      THGrow_journal_entries: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "THGrow_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      THGrow_partners: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image: string | null
+          link: string | null
+          name: string
+          order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image?: string | null
+          link?: string | null
+          name: string
+          order: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image?: string | null
+          link?: string | null
+          name?: string
+          order?: number
         }
         Relationships: []
       }
@@ -272,7 +284,7 @@ export type Database = {
         }
         Relationships: []
       }
-      users: {
+      THGrow_users: {
         Row: {
           created_at: string
           email: string | null
