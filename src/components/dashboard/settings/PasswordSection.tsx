@@ -29,6 +29,8 @@ export const PasswordSection = ({ couponCode }: PasswordSectionProps) => {
 
     setIsChangingPassword(true);
     try {
+      console.log("Verifying current password for coupon:", couponCode);
+      
       const { data: user, error: verifyError } = await supabase
         .from('thg_affiliate_users')
         .select('*')
@@ -36,24 +38,42 @@ export const PasswordSection = ({ couponCode }: PasswordSectionProps) => {
         .eq('password', currentPassword)
         .maybeSingle();
 
-      if (verifyError || !user) {
+      console.log("Verification response:", { user, verifyError });
+
+      if (verifyError) {
+        console.error("Verification error:", verifyError);
+        toast.error("An error occurred while verifying your password");
+        return;
+      }
+      
+      if (!user) {
         toast.error("Current password is incorrect");
         return;
       }
 
+      console.log("Updating password for coupon:", couponCode);
+      
       const { error: updateError } = await supabase
         .from('thg_affiliate_users')
         .update({ password: newPassword })
         .eq('coupon', couponCode);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Update error:", updateError);
+        throw updateError;
+      }
 
-      await supabase
+      const { error: historyError } = await supabase
         .from('password_change_history')
         .insert({
           coupon_code: couponCode,
           changed_by: couponCode
         });
+        
+      if (historyError) {
+        console.warn("Error recording password change history:", historyError);
+        // Continue despite history error
+      }
 
       toast.success("Password updated successfully!");
       setCurrentPassword("");
@@ -69,39 +89,42 @@ export const PasswordSection = ({ couponCode }: PasswordSectionProps) => {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">Change Password</h3>
+      <h3 className="font-medium text-[#3B751E]">Change Password</h3>
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>Current Password</Label>
+          <Label className="text-[#9C7705]/70">Current Password</Label>
           <Input
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Enter current password"
+            className="border-[#9C7705]/30 focus-visible:ring-[#3B751E]"
           />
         </div>
         <div className="space-y-2">
-          <Label>New Password</Label>
+          <Label className="text-[#9C7705]/70">New Password</Label>
           <Input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter new password"
+            className="border-[#9C7705]/30 focus-visible:ring-[#3B751E]"
           />
         </div>
         <div className="space-y-2">
-          <Label>Confirm New Password</Label>
+          <Label className="text-[#9C7705]/70">Confirm New Password</Label>
           <Input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm new password"
+            className="border-[#9C7705]/30 focus-visible:ring-[#3B751E]"
           />
         </div>
         <Button 
           onClick={handleChangePassword}
           disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
-          className="w-full"
+          className="w-full bg-[#3B751E] hover:bg-[#3B751E]/90 text-white"
         >
           {isChangingPassword ? "Changing Password..." : "Change Password"}
         </Button>
