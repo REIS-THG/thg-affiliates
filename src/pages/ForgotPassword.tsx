@@ -92,14 +92,14 @@ const ForgotPassword = () => {
             </form>
           ) : (
             <div className="pt-4">
-              <Button
-                as={Link}
-                to="/login"
-                variant="outline" 
-                className="w-full border-[#3B751E] text-[#3B751E] hover:bg-[#3B751E]/10"
-              >
-                Return to Login
-              </Button>
+              <Link to="/login">
+                <Button
+                  variant="outline" 
+                  className="w-full border-[#3B751E] text-[#3B751E] hover:bg-[#3B751E]/10"
+                >
+                  Return to Login
+                </Button>
+              </Link>
             </div>
           )}
         </Card>
