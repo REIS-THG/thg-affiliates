@@ -7,7 +7,7 @@ import { UsageHistory } from "@/components/UsageHistory";
 import { AffiliateEarnings } from "@/components/AffiliateEarnings";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client"; // Updated to use the correct Supabase client
 import { NotificationsDialog } from "@/components/dashboard/NotificationsDialog";
 import { SettingsDialog } from "@/components/dashboard/SettingsDialog";
 import { Switch } from "@/components/ui/switch";
@@ -53,27 +53,31 @@ const Dashboard = () => {
         
         // Only fetch affiliate preferences if not an admin
         if (user.role !== "admin") {
-          const { data: affiliateUser, error } = await supabase
-            .from('thg_affiliate_users')
-            .select('*')
-            .eq('coupon', user.coupon_code)
-            .maybeSingle();
+          try {
+            const { data: affiliateUser, error } = await supabase
+              .from('thg_affiliate_users')
+              .select('*')
+              .eq('coupon', user.coupon_code)
+              .maybeSingle();
 
-          if (error) {
-            console.error("Error fetching user preferences:", error);
-            throw error;
-          }
-
-          if (affiliateUser) {
-            setUserSettings({
-              paymentMethod: affiliateUser.payment_method || '',
-              paymentDetails: affiliateUser.payment_details || '',
-              emailNotifications: affiliateUser.email_notifications ?? true,
-              notificationEmail: affiliateUser.notification_email || '',
-              notificationFrequency: affiliateUser.notification_frequency || 'daily',
-              viewType: affiliateUser.view_type || 'personal'
-            });
-            setViewAll(affiliateUser.view_type === 'all');
+            if (error) {
+              console.error("Error fetching user preferences:", error);
+              // Continue with default settings instead of throwing
+              console.log("Using default settings due to fetch error");
+            } else if (affiliateUser) {
+              setUserSettings({
+                paymentMethod: affiliateUser.payment_method || '',
+                paymentDetails: affiliateUser.payment_details || '',
+                emailNotifications: affiliateUser.email_notifications ?? true,
+                notificationEmail: affiliateUser.notification_email || '',
+                notificationFrequency: affiliateUser.notification_frequency || 'daily',
+                viewType: affiliateUser.view_type || 'personal'
+              });
+              setViewAll(affiliateUser.view_type === 'all');
+            }
+          } catch (fetchError) {
+            console.error("Fetch error:", fetchError);
+            // Continue with default settings
           }
         }
         
@@ -102,12 +106,20 @@ const Dashboard = () => {
   const handleViewToggle = async (checked: boolean) => {
     try {
       const newViewType = checked ? 'all' : 'personal';
-      const { error } = await supabase
-        .from('thg_affiliate_users')
-        .update({ view_type: newViewType })
-        .eq('coupon', couponCode);
+      
+      try {
+        const { error } = await supabase
+          .from('thg_affiliate_users')
+          .update({ view_type: newViewType })
+          .eq('coupon', couponCode);
 
-      if (error) throw error;
+        if (error) {
+          console.error('Supabase update error:', error);
+        }
+      } catch (updateError) {
+        console.error('Error updating view preference in database:', updateError);
+        // Continue with UI update even if database update fails
+      }
 
       setViewAll(checked);
       setUserSettings(prev => ({ ...prev, viewType: newViewType }));
