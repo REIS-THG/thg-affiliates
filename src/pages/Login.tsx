@@ -1,155 +1,144 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { authStateChanged } from "../App";
+import { supabase } from "../integrations/supabase/client";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!couponCode || !password) {
-      toast.error("Please enter both coupon code and password");
-      return;
-    }
-    
-    setLoading(true);
-    
+    setError(null);
+    setIsLoading(true);
+
     try {
-      console.log("Attempting login with:", couponCode.trim(), password);
-      
-      // Authenticate user with Supabase
-      const { data: affiliateUser, error } = await supabase
+      // Fetch user data from Supabase
+      const { data, error } = await supabase
         .from('thg_affiliate_users')
         .select('*')
-        .eq('coupon', couponCode.trim())
+        .eq('coupon', couponCode)
         .eq('password', password)
         .maybeSingle();
 
-      console.log("Login response:", { affiliateUser, error });
-
       if (error) {
-        console.error("Supabase error:", error);
-        throw new Error('Database error occurred');
-      }
-      
-      if (!affiliateUser) {
-        throw new Error('Invalid credentials');
+        throw new Error(error.message);
       }
 
-      // Store user data in localStorage
+      if (!data) {
+        throw new Error("Invalid coupon code or password");
+      }
+
+      // Store user data in localStorage (consider using a more secure method in production)
       localStorage.setItem('affiliateUser', JSON.stringify({
-        id: affiliateUser.id,
-        coupon_code: affiliateUser.coupon,
-        role: affiliateUser.role,
-        email: affiliateUser.email,
-        notification_email: affiliateUser.notification_email,
-        notification_frequency: affiliateUser.notification_frequency,
-        email_notifications: affiliateUser.email_notifications,
-        payment_method: affiliateUser.payment_method,
-        payment_details: affiliateUser.payment_details
+        coupon_code: data.coupon,
+        role: data.role || 'affiliate'
       }));
-      
-      // Trigger auth state change
-      authStateChanged();
-      
-      toast.success("Successfully logged in");
-      
-      navigate("/");
+
+      toast.success("Login successful!");
+      navigate('/dashboard');
     } catch (error) {
       console.error("Login error:", error);
-      toast.error(
-        error instanceof Error 
-          ? error.message 
-          : "Invalid coupon code or password. Please check your credentials."
-      );
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      toast.error("Login failed");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#F9F7F0] to-[#F3EFE0]">
-      <div className="w-full max-w-md p-6">
-        <Card className="w-full p-8 space-y-6 shadow-xl border-[#9C7705]/20">
-          <div className="space-y-3 text-center">
-            <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-[#3B751E]/10 flex items-center justify-center">
-                <ShieldCheck className="h-8 w-8 text-[#3B751E]" />
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-[#3B751E]">Affiliate Portal</h1>
-            <p className="text-[#9C7705]/70">Sign in to access your affiliate dashboard</p>
+    <div className="min-h-screen bg-[#F9F7F0] flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-8 border border-[#9C7705]/10">
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-2">
+            <img
+              src="/placeholder.svg"
+              alt="Logo"
+              className="h-12 w-12"
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-[#3B751E]">Welcome Back</h1>
+          <p className="text-[#9C7705]/70">Sign in to your affiliate account</p>
+        </div>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4 text-sm">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="couponCode" className="block text-sm font-medium text-[#3B751E]">
+              Coupon Code
+            </label>
+            <input
+              id="couponCode"
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              className="w-full px-3 py-2 border border-[#9C7705]/20 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50"
+              placeholder="Enter your coupon code"
+              required
+            />
           </div>
           
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#3B751E]">Coupon Code</label>
-              <Input
-                type="text"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                className="border-[#9C7705]/30 focus-visible:ring-[#3B751E]"
-                placeholder="Enter your coupon code"
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-medium text-[#3B751E]">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-[#9C7705]/20 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50"
+                placeholder="Enter your password"
                 required
-                autoFocus
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#9C7705]/70"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#3B751E]">Password</label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="border-[#9C7705]/30 focus-visible:ring-[#3B751E] pr-10"
-                  placeholder="Enter your password"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9C7705] h-7 w-7"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-3.5 w-3.5" />
-                  ) : (
-                    <Eye className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-              </div>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-[#3B751E] hover:bg-[#3B751E]/90 text-white transition-all"
-              disabled={loading}
+          </div>
+          
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-[#3B751E] hover:underline"
             >
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-            
-            <div className="text-center text-sm">
-              <Link to="/forgot-password" className="text-[#3B751E] hover:underline font-medium">
-                Forgot password?
-              </Link>
-            </div>
-          </form>
-        </Card>
+              Forgot password?
+            </Link>
+          </div>
+          
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-2 px-4 bg-[#3B751E] hover:bg-[#3B751E]/90 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50 transition-colors disabled:opacity-50"
+          >
+            {isLoading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-sm text-[#9C7705]/70">
+            Don't have an account?{" "}
+            <span className="text-[#3B751E] font-medium">
+              Contact support
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   );

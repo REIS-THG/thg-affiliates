@@ -338,7 +338,7 @@ export const UserManagement = () => {
                   )}
                 </div>
               </div>
-              <Alert variant="warning" className="mb-4">
+              <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Password Security</AlertTitle>
                 <AlertDescription>
@@ -531,7 +531,7 @@ export const UserManagement = () => {
                               Are you sure you want to delete the affiliate with coupon code: {currentAffiliate?.coupon}?
                             </DialogDescription>
                           </DialogHeader>
-                          <Alert variant="destructive" className="my-4">
+                          <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
                             <AlertTitle>Warning</AlertTitle>
                             <AlertDescription>
