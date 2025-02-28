@@ -30,7 +30,7 @@ export const PasswordSection = ({ couponCode }: PasswordSectionProps) => {
     setIsChangingPassword(true);
     try {
       const { data: user, error: verifyError } = await supabase
-        .from('THG_Affiliate_Users')
+        .from('thg_affiliate_users')
         .select('*')
         .eq('coupon', couponCode)
         .eq('password', currentPassword)
@@ -42,7 +42,7 @@ export const PasswordSection = ({ couponCode }: PasswordSectionProps) => {
       }
 
       const { error: updateError } = await supabase
-        .from('THG_Affiliate_Users')
+        .from('thg_affiliate_users')
         .update({ password: newPassword })
         .eq('coupon', couponCode);
 

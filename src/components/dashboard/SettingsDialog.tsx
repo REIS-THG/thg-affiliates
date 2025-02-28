@@ -37,7 +37,7 @@ export const SettingsDialog = ({ couponCode, initialSettings }: SettingsDialogPr
   const handleSaveSettings = async () => {
     try {
       const { error } = await supabase
-        .from('THG_Affiliate_Users')
+        .from('thg_affiliate_users')
         .update({
           payment_method: paymentMethod,
           payment_details: paymentDetails,
