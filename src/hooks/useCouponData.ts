@@ -16,11 +16,18 @@ const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<
     
     // For production, we'd filter by user's coupon code
     // For demo, fetch all data regardless
-    const { data: couponData, error } = await supabase
+    const query = supabase
       .from('coupon_usage')
       .select('*')
       .gte('date', startDate)
       .order('date', { ascending: true });
+      
+    // If not admin and not viewAll, filter by user's coupon code
+    if (user && user.role !== 'admin' && !viewAll && user.coupon_code) {
+      query.eq('code', user.coupon_code);
+    }
+    
+    const { data: couponData, error } = await query;
 
     if (error) {
       console.error('Supabase error:', error);

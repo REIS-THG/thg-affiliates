@@ -51,11 +51,19 @@ const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data:
     
     // Try to get data from Supabase
     try {
-      const { data, error, count } = await supabase
+      const query = supabase
         .from('coupon_usage')
         .select('*', { count: 'exact' })
-        .order('date', { ascending: false })
-        .range(startIndex, startIndex + ITEMS_PER_PAGE - 1);
+        .order('date', { ascending: false });
+      
+      // If not admin and not viewAll, filter by user's coupon code
+      if (user && user.role !== 'admin' && !viewAll && user.coupon_code) {
+        query.eq('code', user.coupon_code);
+      }
+        
+      query.range(startIndex, startIndex + ITEMS_PER_PAGE - 1);
+      
+      const { data, error, count } = await query;
       
       if (error) throw error;
       
