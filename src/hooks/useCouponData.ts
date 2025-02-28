@@ -9,11 +9,13 @@ import type { CouponUsage } from "@/types/coupon";
 const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<CouponUsage[]> => {
   try {
     const startDate = getStartDate(days);
+    
+    // Get user data from localStorage if available, but don't error out if missing
     const userStr = localStorage.getItem('affiliateUser');
-    if (!userStr) throw new Error('No user data found');
+    const user = userStr ? JSON.parse(userStr) : null;
     
-    const user = JSON.parse(userStr);
-    
+    // For production, we'd filter by user's coupon code
+    // For demo, fetch all data regardless
     const { data: couponData, error } = await supabase
       .from('coupon_usage')
       .select('*')
