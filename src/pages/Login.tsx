@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Eye, EyeOff, ShieldCheck } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { authStateChanged } from "../App";
 
 const Login = () => {
@@ -24,9 +24,9 @@ const Login = () => {
     try {
       // Authenticate user with Supabase
       const { data: affiliateUser, error } = await supabase
-        .from('affiliate_users')
+        .from('thg_affiliate_users')
         .select('*')
-        .eq('coupon_code', couponCode.trim())
+        .eq('coupon', couponCode.trim())
         .eq('password', password) // Note: In production, use proper password hashing
         .single();
 
@@ -35,7 +35,17 @@ const Login = () => {
       }
 
       // Store user data in localStorage
-      localStorage.setItem('affiliateUser', JSON.stringify(affiliateUser));
+      localStorage.setItem('affiliateUser', JSON.stringify({
+        id: affiliateUser.id,
+        coupon_code: affiliateUser.coupon,
+        role: affiliateUser.role,
+        email: affiliateUser.email,
+        notification_email: affiliateUser.notification_email,
+        notification_frequency: affiliateUser.notification_frequency,
+        email_notifications: affiliateUser.email_notifications,
+        payment_method: affiliateUser.payment_method,
+        payment_details: affiliateUser.payment_details
+      }));
       
       // Trigger auth state change
       authStateChanged();

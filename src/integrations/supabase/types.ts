@@ -9,7 +9,121 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      coupon_usage: {
+        Row: {
+          code: string
+          created_at: string | null
+          date: string
+          earnings: number
+          id: string
+          order_status: string | null
+          payout_date: string | null
+          product_name: string
+          quantity: number
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          date: string
+          earnings?: number
+          id?: string
+          order_status?: string | null
+          payout_date?: string | null
+          product_name: string
+          quantity?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          date?: string
+          earnings?: number
+          id?: string
+          order_status?: string | null
+          payout_date?: string | null
+          product_name?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usage_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "thg_affiliate_users"
+            referencedColumns: ["coupon"]
+          },
+        ]
+      }
+      password_change_history: {
+        Row: {
+          changed_by: string
+          coupon_code: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          changed_by: string
+          coupon_code: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          changed_by?: string
+          coupon_code?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "password_change_history_coupon_code_fkey"
+            columns: ["coupon_code"]
+            isOneToOne: false
+            referencedRelation: "thg_affiliate_users"
+            referencedColumns: ["coupon"]
+          },
+        ]
+      }
+      thg_affiliate_users: {
+        Row: {
+          coupon: string
+          created_at: string | null
+          email: string | null
+          email_notifications: boolean | null
+          id: string
+          notification_email: string | null
+          notification_frequency: string | null
+          password: string
+          payment_details: string | null
+          payment_method: string | null
+          role: string | null
+        }
+        Insert: {
+          coupon: string
+          created_at?: string | null
+          email?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          notification_email?: string | null
+          notification_frequency?: string | null
+          password: string
+          payment_details?: string | null
+          payment_method?: string | null
+          role?: string | null
+        }
+        Update: {
+          coupon?: string
+          created_at?: string | null
+          email?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          notification_email?: string | null
+          notification_frequency?: string | null
+          password?: string
+          payment_details?: string | null
+          payment_method?: string | null
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
