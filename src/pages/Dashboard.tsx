@@ -27,9 +27,11 @@ const Dashboard = () => {
     notificationFrequency: "daily",
     viewType: "personal"
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       const userStr = localStorage.getItem('affiliateUser');
       if (!userStr) {
         uiToast({
@@ -50,9 +52,9 @@ const Dashboard = () => {
         setIsAdmin(user.role === "admin");
         
         // Only fetch affiliate preferences if not an admin
-        if (!isAdmin) {
+        if (user.role !== "admin") {
           const { data: affiliateUser, error } = await supabase
-            .from('THG_Affiliate_Users')
+            .from('thg_affiliate_users')
             .select('*')
             .eq('coupon', user.coupon_code)
             .maybeSingle();
@@ -89,6 +91,8 @@ const Dashboard = () => {
           variant: "destructive",
         });
         navigate('/login');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -99,7 +103,7 @@ const Dashboard = () => {
     try {
       const newViewType = checked ? 'all' : 'personal';
       const { error } = await supabase
-        .from('THG_Affiliate_Users')
+        .from('thg_affiliate_users')
         .update({ view_type: newViewType })
         .eq('coupon', couponCode);
 
@@ -124,30 +128,39 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F9F7F0] flex items-center justify-center">
+        <div className="animate-pulse text-[#3B751E] text-xl">Loading your dashboard...</div>
+      </div>
+    );
+  }
+
   if (!couponCode) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#F9F7F0]">
       <Header onLogout={handleLogout} />
       <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold text-[#3B751E]">Dashboard</h1>
+            <p className="text-[#9C7705]/70">
               {isAdmin ? "Admin Dashboard Overview" : "Track your affiliate performance and earnings"}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
             {!isAdmin && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-white/80 px-3 py-2 rounded-lg shadow-sm border border-[#9C7705]/10">
                 <Switch
                   id="view-toggle"
                   checked={viewAll}
                   onCheckedChange={handleViewToggle}
+                  className="data-[state=checked]:bg-[#3B751E]"
                 />
-                <Label htmlFor="view-toggle" className="text-sm">
+                <Label htmlFor="view-toggle" className="text-sm text-[#3B751E] font-medium">
                   {viewAll ? "All Affiliates" : "Personal View"}
                 </Label>
               </div>
@@ -164,10 +177,18 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <div className="space-y-6">
-          <AffiliateEarnings viewType={viewAll ? 'all' : 'personal'} />
-          <UsageAnalytics couponCode={couponCode} viewAll={viewAll} />
-          <UsageHistory viewAll={viewAll} />
+        <div className="space-y-8">
+          <section className="bg-white/70 p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm">
+            <AffiliateEarnings viewType={viewAll ? 'all' : 'personal'} />
+          </section>
+          
+          <section className="bg-white/70 p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm">
+            <UsageAnalytics couponCode={couponCode} viewAll={viewAll} />
+          </section>
+          
+          <section className="bg-white/70 p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm">
+            <UsageHistory viewAll={viewAll} />
+          </section>
         </div>
       </div>
     </div>

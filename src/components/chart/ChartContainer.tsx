@@ -13,11 +13,11 @@ import {
 import type { CouponData } from "@/types/coupon";
 
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--destructive))",
-  "#10B981",
-  "#6366F1",
-  "#F59E0B",
+  "#3B751E", // Primary brand green
+  "#9C7705", // Secondary brand gold
+  "#10B981", // Additional green
+  "#6366F1", // Purple
+  "#F97316", // Orange
 ];
 
 interface ChartContainerProps {
@@ -27,19 +27,19 @@ interface ChartContainerProps {
 
 export const ChartContainer = ({ data, couponCodes }: ChartContainerProps) => {
   return (
-    <Card className="w-full h-[400px] p-4">
+    <Card className="w-full h-[400px] p-4 border-[#9C7705]/10">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="date"
-            stroke="#888888"
+            stroke="#9C7705"
             fontSize={12}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
-            stroke="#888888"
+            stroke="#9C7705"
             fontSize={12}
             tickLine={false}
             axisLine={false}
@@ -51,8 +51,14 @@ export const ChartContainer = ({ data, couponCodes }: ChartContainerProps) => {
               border: "1px solid #e2e8f0",
               borderRadius: "6px",
             }}
+            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Earnings']}
           />
-          <Legend />
+          <Legend 
+            formatter={(value) => {
+              // Remove the "_earnings" suffix from legend labels
+              return value.replace('_earnings', '');
+            }}
+          />
           {couponCodes.map((code, index) => (
             <Line
               key={code}

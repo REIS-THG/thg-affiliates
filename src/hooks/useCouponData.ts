@@ -6,11 +6,11 @@ import { getStartDate } from "@/utils/dateUtils";
 import { useEffect } from "react";
 import type { CouponUsage } from "@/types/coupon";
 
-const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<CouponUsage[]> => {
+const fetchCouponData = async (days: number, viewAll: boolean = false, refreshKey: number = 0): Promise<CouponUsage[]> => {
   try {
     const startDate = getStartDate(days);
     
-    // Get user data from localStorage if available, but don't error out if missing
+    // Get user data from localStorage if available
     const userStr = localStorage.getItem('affiliateUser');
     const user = userStr ? JSON.parse(userStr) : null;
     
@@ -19,10 +19,19 @@ const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<
       return generateMockData(days);
     }
     
+    console.log('Fetching coupon data:', { 
+      days, 
+      startDate, 
+      viewAll, 
+      refresh: refreshKey,
+      user_coupon: user.coupon_code,
+      is_admin: user.role === 'admin'
+    });
+    
     // Query coupon usage data
     const query = supabase
       .from('coupon_usage')
-      .select('*')
+      .select('code, date, quantity, earnings')
       .gte('date', startDate)
       .order('date', { ascending: true });
       
@@ -43,6 +52,9 @@ const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<
       return generateMockData(days);
     }
 
+    console.log('Coupon data received:', { count: couponData.length, sample: couponData[0] });
+
+    // Group the data by coupon code
     const groupedData = couponData.reduce((acc: { [key: string]: any }, curr) => {
       if (!acc[curr.code]) {
         acc[curr.code] = {
@@ -50,37 +62,56 @@ const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<
           data: []
         };
       }
-      acc[curr.code].data.push({
-        date: curr.date,
-        quantity: curr.quantity || 0,
-        earnings: curr.earnings || 0
-      });
+      
+      // Check if this date already exists in the data array
+      const existingDateIndex = acc[curr.code].data.findIndex((item: any) => item.date === curr.date);
+      
+      if (existingDateIndex >= 0) {
+        // Update existing date with cumulative values
+        acc[curr.code].data[existingDateIndex].quantity += (curr.quantity || 0);
+        acc[curr.code].data[existingDateIndex].earnings += (curr.earnings || 0);
+      } else {
+        // Add new date entry
+        acc[curr.code].data.push({
+          date: curr.date,
+          quantity: curr.quantity || 0,
+          earnings: curr.earnings || 0
+        });
+      }
+      
       return acc;
     }, {});
 
-    return Object.values(groupedData);
+    // Convert the grouped data to an array
+    const result = Object.values(groupedData);
+    console.log('Processed coupon data:', result);
+    
+    return result as CouponUsage[];
   } catch (error) {
     console.error('Error fetching coupon data:', error);
     return generateMockData(days);
   }
 };
 
-export const useCouponData = (timeRange: string, viewAll: boolean = false) => {
+export const useCouponData = (timeRange: string, viewAll: boolean = false, refreshKey: number = 0) => {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["couponData", timeRange, viewAll],
-    queryFn: () => fetchCouponData(parseInt(timeRange), viewAll),
-    refetchInterval: 30000,
+    queryKey: ["couponData", timeRange, viewAll, refreshKey],
+    queryFn: () => fetchCouponData(parseInt(timeRange), viewAll, refreshKey),
+    refetchInterval: 60000, // Refresh every minute
+    staleTime: 30000, // Consider data stale after 30 seconds
   });
 
   useEffect(() => {
+    // Subscribe to real-time changes in the coupon_usage table
     const subscription = supabase
       .channel('coupon_usage_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'coupon_usage' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['couponData', timeRange] });
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          queryClient.invalidateQueries({ queryKey: ['couponData'] });
         }
       )
       .subscribe();
@@ -88,7 +119,7 @@ export const useCouponData = (timeRange: string, viewAll: boolean = false) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [queryClient, timeRange]);
+  }, [queryClient]);
 
   return query;
 };
