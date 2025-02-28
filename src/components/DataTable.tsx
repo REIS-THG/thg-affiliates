@@ -47,6 +47,10 @@ const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data:
     const userStr = localStorage.getItem('affiliateUser');
     const user = userStr ? JSON.parse(userStr) : null;
     
+    if (!user) {
+      throw new Error('No user data found. Please log in again.');
+    }
+    
     const startIndex = page * ITEMS_PER_PAGE;
     
     // Try to get data from Supabase
@@ -57,7 +61,7 @@ const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data:
         .order('date', { ascending: false });
       
       // If not admin and not viewAll, filter by user's coupon code
-      if (user && user.role !== 'admin' && !viewAll && user.coupon_code) {
+      if (user.role !== 'admin' && !viewAll) {
         query.eq('code', user.coupon_code);
       }
         
@@ -152,19 +156,19 @@ export const DataTable = ({ viewAll = false }: DataTableProps) => {
   return (
     <Card className="w-full">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-[#3B751E]/10">
           <TableRow>
-            <TableHead>Product Name</TableHead>
-            <TableHead>Purchase Date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Payout Date</TableHead>
-            <TableHead className="text-right">Qty Purchased</TableHead>
-            <TableHead className="text-right">Earnings/Purchase</TableHead>
+            <TableHead className="text-[#3B751E]">Product Name</TableHead>
+            <TableHead className="text-[#3B751E]">Purchase Date</TableHead>
+            <TableHead className="text-[#3B751E]">Status</TableHead>
+            <TableHead className="text-[#3B751E]">Payout Date</TableHead>
+            <TableHead className="text-[#3B751E] text-right">Qty Purchased</TableHead>
+            <TableHead className="text-[#3B751E] text-right">Earnings/Purchase</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data?.data.map((row, index) => (
-            <TableRow key={index}>
+            <TableRow key={index} className="hover:bg-[#F9F7F0]">
               <TableCell className="font-medium">{row.product_name}</TableCell>
               <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
               <TableCell>
@@ -176,7 +180,7 @@ export const DataTable = ({ viewAll = false }: DataTableProps) => {
                 {row.payout_date ? new Date(row.payout_date).toLocaleDateString() : 'Pending'}
               </TableCell>
               <TableCell className="text-right">{row.quantity}</TableCell>
-              <TableCell className="text-right">${row.earnings.toFixed(2)}</TableCell>
+              <TableCell className="text-right font-semibold text-[#3B751E]">${row.earnings.toFixed(2)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -188,7 +192,7 @@ export const DataTable = ({ viewAll = false }: DataTableProps) => {
               <PaginationItem>
                 <PaginationPrevious 
                   onClick={() => currentPage > 0 && setCurrentPage(p => p - 1)}
-                  className={cn(currentPage === 0 && "pointer-events-none opacity-50")}
+                  className={cn(currentPage === 0 && "pointer-events-none opacity-50", "text-[#3B751E]")}
                 />
               </PaginationItem>
               {Array.from({ length: totalPages }).map((_, i) => (
@@ -196,6 +200,7 @@ export const DataTable = ({ viewAll = false }: DataTableProps) => {
                   <PaginationLink
                     onClick={() => setCurrentPage(i)}
                     isActive={currentPage === i}
+                    className={currentPage === i ? "bg-[#3B751E] text-white" : "text-[#3B751E]"}
                   >
                     {i + 1}
                   </PaginationLink>
@@ -204,7 +209,7 @@ export const DataTable = ({ viewAll = false }: DataTableProps) => {
               <PaginationItem>
                 <PaginationNext 
                   onClick={() => currentPage < totalPages - 1 && setCurrentPage(p => p + 1)}
-                  className={cn(currentPage === totalPages - 1 && "pointer-events-none opacity-50")}
+                  className={cn(currentPage === totalPages - 1 && "pointer-events-none opacity-50", "text-[#3B751E]")}
                 />
               </PaginationItem>
             </PaginationContent>

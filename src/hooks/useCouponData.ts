@@ -14,8 +14,12 @@ const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<
     const userStr = localStorage.getItem('affiliateUser');
     const user = userStr ? JSON.parse(userStr) : null;
     
-    // For production, we'd filter by user's coupon code
-    // For demo, fetch all data regardless
+    if (!user) {
+      console.warn('No user data found. Using mock data.');
+      return generateMockData(days);
+    }
+    
+    // Query coupon usage data
     const query = supabase
       .from('coupon_usage')
       .select('*')
@@ -23,7 +27,7 @@ const fetchCouponData = async (days: number, viewAll: boolean = false): Promise<
       .order('date', { ascending: true });
       
     // If not admin and not viewAll, filter by user's coupon code
-    if (user && user.role !== 'admin' && !viewAll && user.coupon_code) {
+    if (user.role !== 'admin' && !viewAll) {
       query.eq('code', user.coupon_code);
     }
     

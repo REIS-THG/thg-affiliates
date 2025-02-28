@@ -14,9 +14,11 @@ export interface CouponUsage {
 }
 
 export interface AffiliateUser {
-  coupon: string;
+  id?: string;
+  coupon_code: string;
   password: string;
   email?: string;
+  role?: string;
   notification_email?: string;
   notification_frequency?: 'daily' | 'weekly' | 'monthly';
   email_notifications?: boolean;

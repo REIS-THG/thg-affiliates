@@ -46,16 +46,16 @@ export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => 
 
   if (isLoading) {
     return (
-      <Card className="w-full h-[400px] relative overflow-hidden">
-        <div className="animate-pulse bg-gray-200 w-full h-full" />
+      <Card className="w-full h-[400px] relative overflow-hidden bg-[#F9F7F0]/50">
+        <div className="animate-pulse bg-[#3B751E]/10 w-full h-full" />
       </Card>
     );
   }
 
   if (error) {
     return (
-      <Card className="w-full h-[400px] flex items-center justify-center">
-        <p className="text-destructive">Error loading data: {error.message}</p>
+      <Card className="w-full h-[400px] flex items-center justify-center bg-[#F9F7F0]/50">
+        <p className="text-red-500">Error loading data: {error.message}</p>
       </Card>
     );
   }
@@ -65,7 +65,9 @@ export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => 
   return (
     <div className="space-y-4">
       <TimeRangeSelector value={timeRange} onValueChange={setTimeRange} />
-      <ChartContainer data={processedData} couponCodes={couponCodes} />
+      <Card className="p-4 bg-[#F9F7F0]/50">
+        <ChartContainer data={processedData} couponCodes={couponCodes} />
+      </Card>
     </div>
   );
 };

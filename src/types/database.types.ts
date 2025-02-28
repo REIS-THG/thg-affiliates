@@ -16,15 +16,19 @@ export interface AffiliateUser {
 export interface CouponUsage {
   id: string;
   created_at: string;
-  coupon_code: string;
-  amount: number;
-  user_id: string;
+  code: string;
+  date: string;
+  product_name: string;
+  quantity: number;
+  earnings: number;
+  order_status: string;
+  payout_date: string | null;
 }
 
 export type Database = {
   public: {
     Tables: {
-      'Affiliate Users': {
+      'affiliate_users': {
         Row: AffiliateUser;
         Insert: Omit<AffiliateUser, 'id' | 'created_at'>;
         Update: Partial<Omit<AffiliateUser, 'id' | 'created_at'>>;

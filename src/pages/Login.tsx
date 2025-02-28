@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { authStateChanged } from "../App";
 
@@ -22,81 +22,35 @@ const Login = () => {
     setLoading(true);
     
     try {
-      // Check for admin login first
-      console.log("Admin login attempt:", {
-        username: couponCode.trim(),
-      });
+      // Authenticate user with Supabase
+      const { data: affiliateUser, error } = await supabase
+        .from('affiliate_users')
+        .select('*')
+        .eq('coupon_code', couponCode.trim())
+        .eq('password', password) // Note: In production, use proper password hashing
+        .single();
 
-      // For demo purposes: hardcoded admin check
-      if (couponCode.trim() === "THGadmin" && password === "admin123") {
-        console.log("Admin login successful with demo credentials");
-        
-        const userData = { 
-          coupon_code: "THGadmin",
-          role: "admin" 
-        };
-        localStorage.setItem('affiliateUser', JSON.stringify(userData));
-        // Trigger auth state change
-        authStateChanged();
-        toast({
-          title: "Success",
-          description: "Successfully logged in as admin",
-        });
-        navigate("/");
-        return;
+      if (error || !affiliateUser) {
+        throw new Error('Invalid credentials');
       }
+
+      // Store user data in localStorage
+      localStorage.setItem('affiliateUser', JSON.stringify(affiliateUser));
       
-      // If not admin, check affiliate users
-      console.log("Attempting affiliate login:", {
-        couponCode: couponCode.trim(),
+      // Trigger auth state change
+      authStateChanged();
+      
+      toast({
+        title: "Success",
+        description: "Successfully logged in",
       });
       
-      // For demo: check mock affiliate credentials
-      const mockAffiliates = [
-        { code: 'SARAH20', password: 'demo123' },
-        { code: 'JOHN15', password: 'demo123' },
-        { code: 'MIKE25', password: 'demo123' },
-        { code: 'EMMA10', password: 'demo123' },
-        { code: 'ALEX30', password: 'demo123' }
-      ];
-
-      const affiliateMatch = mockAffiliates.find(
-        aff => aff.code === couponCode.trim() && aff.password === password
-      );
-
-      if (affiliateMatch) {
-        console.log("Affiliate login successful:", affiliateMatch);
-        const userData = {
-          coupon_code: affiliateMatch.code,
-          role: "affiliate",
-          email: `${affiliateMatch.code.toLowerCase()}@example.com`,
-          payment_method: "PayPal",
-          payment_details: "demo@example.com",
-          notification_email: `${affiliateMatch.code.toLowerCase()}@example.com`,
-          notification_frequency: "daily",
-          email_notifications: true
-        };
-        localStorage.setItem('affiliateUser', JSON.stringify(userData));
-        // Trigger auth state change
-        authStateChanged();
-        toast({
-          title: "Success",
-          description: "Successfully logged in",
-        });
-        navigate("/");
-      } else {
-        console.log("Login failed: Invalid credentials");
-        toast({
-          title: "Error",
-          description: "Invalid coupon code or password",
-          variant: "destructive",
-        });
-      }
+      navigate("/");
     } catch (error) {
       console.error("Login error:", error);
       toast({
         title: "Error",
-        description: "Failed to sign in. Please check your credentials.",
+        description: "Invalid coupon code or password. Please check your credentials.",
         variant: "destructive",
       });
     } finally {
@@ -105,24 +59,21 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md p-6 space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#F9F7F0]">
+      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg">
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">THG Affiliate Login</h1>
+          <ShieldCheck className="mx-auto h-12 w-12 text-[#3B751E]" />
+          <h1 className="text-3xl font-bold text-[#3B751E]">Affiliate Portal</h1>
           <p className="text-muted-foreground">Sign in to your affiliate dashboard</p>
-          <p className="text-sm text-muted-foreground">
-            Demo admin login: THGadmin / admin123
-            <br />
-            Demo affiliate login: SARAH20 / demo123
-          </p>
         </div>
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-2">
             <Input
               type="text"
               placeholder="Coupon Code"
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value)}
+              className="border-[#9C7705]/30 focus-visible:ring-[#3B751E]"
               required
             />
           </div>
@@ -132,13 +83,14 @@ const Login = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="border-[#9C7705]/30 focus-visible:ring-[#3B751E]"
               required
             />
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9C7705]"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -148,11 +100,15 @@ const Login = () => {
               )}
             </Button>
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button 
+            type="submit" 
+            className="w-full bg-[#3B751E] hover:bg-[#3B751E]/90 text-white" 
+            disabled={loading}
+          >
             {loading ? "Signing in..." : "Sign In"}
           </Button>
           <div className="text-center">
-            <Link to="/forgot-password" className="text-primary hover:underline">
+            <Link to="/forgot-password" className="text-[#3B751E] hover:underline">
               Forgot password?
             </Link>
           </div>
