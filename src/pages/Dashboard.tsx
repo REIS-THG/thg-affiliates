@@ -13,6 +13,8 @@ import { SettingsDialog } from "@/components/dashboard/SettingsDialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
+const STORAGE_KEY_VIEW_PREFERENCE = "thg_affiliate_view_preference";
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState<string>("");
@@ -51,6 +53,13 @@ const Dashboard = () => {
         setCouponCode(user.coupon_code);
         setIsAdmin(user.role === "admin");
         
+        // Load view preference from localStorage
+        const savedViewPreference = localStorage.getItem(STORAGE_KEY_VIEW_PREFERENCE);
+        if (savedViewPreference === 'all') {
+          setViewAll(true);
+          setUserSettings(prev => ({ ...prev, viewType: 'all' }));
+        }
+        
         // Only fetch affiliate preferences if not an admin
         if (user.role !== "admin") {
           try {
@@ -71,9 +80,8 @@ const Dashboard = () => {
                 emailNotifications: affiliateUser.email_notifications ?? true,
                 notificationEmail: affiliateUser.notification_email || '',
                 notificationFrequency: affiliateUser.notification_frequency || 'daily',
-                viewType: affiliateUser.view_type || 'personal'
+                viewType: savedViewPreference || 'personal'
               });
-              setViewAll(affiliateUser.view_type === 'all');
             }
           } catch (fetchError) {
             console.error("Fetch error:", fetchError);
@@ -107,19 +115,8 @@ const Dashboard = () => {
     try {
       const newViewType = checked ? 'all' : 'personal';
       
-      try {
-        const { error } = await supabase
-          .from('thg_affiliate_users')
-          .update({ view_type: newViewType })
-          .eq('coupon', couponCode);
-
-        if (error) {
-          console.error('Supabase update error:', error);
-        }
-      } catch (updateError) {
-        console.error('Error updating view preference in database:', updateError);
-        // Continue with UI update even if database update fails
-      }
+      // Store view preference in localStorage instead of the database
+      localStorage.setItem(STORAGE_KEY_VIEW_PREFERENCE, newViewType);
 
       setViewAll(checked);
       setUserSettings(prev => ({ ...prev, viewType: newViewType }));
