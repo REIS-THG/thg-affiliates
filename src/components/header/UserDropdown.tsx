@@ -27,7 +27,7 @@ export const UserDropdown = ({ couponCode, isAdmin, onLogout }: UserDropdownProp
           {couponCode}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-white z-50">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate("/dashboard")}>

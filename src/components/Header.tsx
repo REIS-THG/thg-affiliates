@@ -27,6 +27,7 @@ export const Header = ({ onLogout }: HeaderProps) => {
         setUser(userData);
       } catch (error) {
         console.error("Error parsing user data:", error);
+        localStorage.removeItem('affiliateUser'); // Clear invalid data
       }
     }
   }, []);
@@ -34,7 +35,7 @@ export const Header = ({ onLogout }: HeaderProps) => {
   const isAdmin = user?.role === 'admin';
   
   return (
-    <header className="bg-white/80 backdrop-blur-sm border-b border-[#9C7705]/10 sticky top-0 z-50">
+    <header className="bg-white/80 backdrop-blur-sm border-b border-[#9C7705]/10 sticky top-0 z-40">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Logo />
 
@@ -59,23 +60,18 @@ export const Header = ({ onLogout }: HeaderProps) => {
           </div>
         ) : (
           <div>
-            {!mobileMenuOpen ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileMenuOpen(true)}
-              >
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              {!mobileMenuOpen ? (
                 <Menu className="h-6 w-6 text-[#3B751E]" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileMenuOpen(false)}
-              >
+              ) : (
                 <X className="h-6 w-6 text-[#3B751E]" />
-              </Button>
-            )}
+              )}
+            </Button>
           </div>
         )}
       </div>

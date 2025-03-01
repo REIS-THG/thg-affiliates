@@ -12,9 +12,9 @@ import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 
 function App() {
   return (
-    <Router>
-      <ErrorProvider>
-        <GlobalErrorBoundary>
+    <ErrorProvider>
+      <GlobalErrorBoundary>
+        <Router>
           <div className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:z-50 focus-visible:bg-white focus-visible:p-4 focus-visible:text-[#3B751E] focus-visible:border focus-visible:border-[#3B751E] focus-visible:rounded">
             <a href="#main-content">Skip to content</a>
           </div>
@@ -37,9 +37,9 @@ function App() {
               } as React.CSSProperties
             }}
           />
-        </GlobalErrorBoundary>
-      </ErrorProvider>
-    </Router>
+        </Router>
+      </GlobalErrorBoundary>
+    </ErrorProvider>
   );
 }
 
