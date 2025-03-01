@@ -17,6 +17,7 @@ interface DashboardHeaderProps {
     notificationFrequency: string;
     viewType: string;
   };
+  isTransitioning?: boolean;
 }
 
 export const DashboardHeader = ({
@@ -24,7 +25,8 @@ export const DashboardHeader = ({
   viewAll,
   onViewToggle,
   couponCode,
-  userSettings
+  userSettings,
+  isTransitioning = false
 }: DashboardHeaderProps) => {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">

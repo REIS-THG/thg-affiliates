@@ -11,10 +11,10 @@ const Dashboard = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Handle view toggles with smooth transitions
-  const handleViewToggleWithTransition = (handler: () => void) => {
+  const handleViewToggleWithTransition = (handler: (checked: boolean) => void) => {
     setIsTransitioning(true);
     setTimeout(() => {
-      handler();
+      handler(true); // Pass a default value to satisfy the type checker
       setIsTransitioning(false);
     }, 300);
   };
@@ -38,6 +38,11 @@ const Dashboard = () => {
           return null;
         }
 
+        // Update this function to correctly handle checked argument
+        const toggleView = () => {
+          handleViewToggleWithTransition((checked) => handleViewToggle(!viewAll));
+        };
+
         return (
           <div className="min-h-screen bg-[#F9F7F0]">
             <Header onLogout={handleLogout} />
@@ -53,7 +58,7 @@ const Dashboard = () => {
                 <DashboardHeader 
                   isAdmin={isAdmin}
                   viewAll={viewAll}
-                  onViewToggle={() => handleViewToggleWithTransition(handleViewToggle)}
+                  onViewToggle={toggleView}
                   couponCode={couponCode}
                   userSettings={userSettings}
                   isTransitioning={isTransitioning}

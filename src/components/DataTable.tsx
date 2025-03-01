@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -9,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client"; // Updated to use the correct Supabase client
+import { supabase } from "@/integrations/supabase/client"; 
 import { useToast } from "@/components/ui/use-toast";
 import {
   Pagination,
@@ -29,6 +28,7 @@ import { Button } from "@/components/ui/button";
 
 interface DataTableProps {
   viewAll?: boolean;
+  isTransitioning?: boolean;
 }
 
 interface CouponUsage {
@@ -45,7 +45,6 @@ const ITEMS_PER_PAGE = 10;
 
 const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data: CouponUsage[], count: number }> => {
   try {
-    // Get user data from localStorage if available
     const userStr = localStorage.getItem('affiliateUser');
     const user = userStr ? JSON.parse(userStr) : null;
     
@@ -63,14 +62,12 @@ const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data:
       startIndex
     });
     
-    // Try to get data from Supabase
     try {
       const query = supabase
         .from('coupon_usage')
         .select('*', { count: 'exact' })
         .order('date', { ascending: false });
       
-      // If not admin and not viewAll, filter by user's coupon code
       if (user.role !== 'admin' && !viewAll) {
         query.eq('code', user.coupon_code);
       }
@@ -95,10 +92,8 @@ const fetchCouponUsage = async (page: number, viewAll: boolean): Promise<{ data:
       }
     } catch (supabaseError) {
       console.error('Supabase fetch error:', supabaseError);
-      // Fall back to mock data if Supabase query fails
     }
     
-    // If we reach here, use mock data
     console.log('Generating mock data for table');
     const mockData = generateMockTableData(30);
     return {
@@ -126,7 +121,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const DataTable = ({ viewAll = false }: DataTableProps) => {
+export const DataTable = ({ viewAll = false, isTransitioning = false }: DataTableProps) => {
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -156,7 +151,7 @@ export const DataTable = ({ viewAll = false }: DataTableProps) => {
 
   const totalPages = data ? Math.ceil(data.count / ITEMS_PER_PAGE) : 0;
 
-  if (isLoading) {
+  if (isLoading || isTransitioning) {
     return (
       <Card className="w-full relative overflow-hidden border-[#9C7705]/10">
         <div className="flex justify-end p-4 border-b border-[#9C7705]/10">
