@@ -57,7 +57,10 @@ const AdminPanel = () => {
         }
         
         setIsAdmin(true);
-        setAdminPermissions(adminData.permissions || {});
+        
+        // Safely cast permissions to Record<string, boolean> or use default
+        const permissions = adminData.permissions as Record<string, boolean>;
+        setAdminPermissions(permissions || {});
         
         // Fetch admin statistics
         try {
