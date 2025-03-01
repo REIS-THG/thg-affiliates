@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronRight, ShieldCheck, Users } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -86,6 +86,74 @@ const Index = () => {
         </section>
         
         {/* The "Key Features" section has been removed */}
+        
+        {!isAuthenticated && (
+          <section className="py-16 bg-white">
+            <div className="container mx-auto px-4 max-w-4xl text-center">
+              <h2 className="text-3xl font-bold text-[#3B751E] mb-6">
+                Join Our Affiliate Program
+              </h2>
+              <p className="text-lg text-[#9C7705]/70 mb-8 max-w-2xl mx-auto">
+                Become an affiliate partner and start earning commissions on every referral. 
+                Our program offers competitive rates and real-time tracking of your earnings.
+              </p>
+              
+              <div className="bg-[#F9F7F0] p-8 rounded-lg shadow-sm border border-[#9C7705]/10 mb-8">
+                <div className="grid md:grid-cols-3 gap-6 text-center mb-8">
+                  <div>
+                    <div className="bg-[#3B751E]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl font-bold text-[#3B751E]">1</span>
+                    </div>
+                    <h3 className="font-medium text-[#3B751E]">Apply to Join</h3>
+                    <p className="text-sm text-[#9C7705]/70 mt-2">
+                      Fill out our simple application form
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <div className="bg-[#3B751E]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl font-bold text-[#3B751E]">2</span>
+                    </div>
+                    <h3 className="font-medium text-[#3B751E]">Get Approved</h3>
+                    <p className="text-sm text-[#9C7705]/70 mt-2">
+                      Receive your affiliate coupon code
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <div className="bg-[#3B751E]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl font-bold text-[#3B751E]">3</span>
+                    </div>
+                    <h3 className="font-medium text-[#3B751E]">Start Earning</h3>
+                    <p className="text-sm text-[#9C7705]/70 mt-2">
+                      Share your code and track earnings
+                    </p>
+                  </div>
+                </div>
+                
+                <Button
+                  onClick={() => window.open("https://forms.example.com/affiliate-application", "_blank")}
+                  size="lg"
+                  className="bg-[#3B751E] hover:bg-[#3B751E]/90 text-white"
+                >
+                  Apply to Join
+                  <Users className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-center space-x-4">
+                <p className="text-[#9C7705]/70">Already an affiliate?</p>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/login")}
+                  className="border-[#3B751E] text-[#3B751E] hover:bg-[#3B751E]/10"
+                >
+                  Sign In to Dashboard
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
         
         {isAdmin && (
           <section className="py-12 bg-[#3B751E]/10">
