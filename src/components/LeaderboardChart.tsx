@@ -1,28 +1,40 @@
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { useCouponData } from "@/hooks/useCouponData";
 import { TimeRangeSelector } from "@/components/chart/TimeRangeSelector";
 import { ChartContainer } from "@/components/chart/ChartContainer";
 import { BarChart, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { CouponData } from "@/types/coupon";
 
 interface LeaderboardChartProps {
   viewAll?: boolean;
+  isTransitioning?: boolean;
 }
 
-export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => {
+export const LeaderboardChart = ({ viewAll = false, isTransitioning = false }: LeaderboardChartProps) => {
   const [timeRange, setTimeRange] = useState<string>("30");
   const [refreshKey, setRefreshKey] = useState(0);
+  const chartCacheRef = useRef<Map<string, any>>(new Map());
   
-  const { data = [], isLoading, error, refetch } = useCouponData(timeRange, viewAll, refreshKey);
+  // Cache key is composed of timeRange, viewAll state, and refreshKey
+  const cacheKey = `${timeRange}-${viewAll}-${refreshKey}`;
+  
+  const { data = [], isLoading, error, refetch, isFetching } = useCouponData(timeRange, viewAll, refreshKey);
 
-  const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
+  // Check if we have cached data before processing
   const processedData = useMemo(() => {
+    // If transitioning, show loading state
+    if (isTransitioning) return [];
+    
+    // Return cached data if available
+    if (chartCacheRef.current.has(cacheKey) && !isLoading) {
+      console.log("Using cached chart data for:", cacheKey);
+      return chartCacheRef.current.get(cacheKey);
+    }
+    
     if (!data || data.length === 0) return [];
     
     try {
@@ -31,7 +43,7 @@ export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => 
       // If not viewAll, filter data to only show the current user's data
       const filteredData = viewAll ? data : data.slice(0, 1);
       
-      return filteredData.reduce((acc: CouponData[], coupon) => {
+      const result = filteredData.reduce((acc: CouponData[], coupon) => {
         if (!acc.length && coupon.data && coupon.data.length > 0) {
           return coupon.data.map((d) => ({
             date: d.date,
@@ -48,22 +60,50 @@ export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => 
           [`${coupon.code}_earnings`]: coupon.data[i]?.earnings || 0,
         }));
       }, []);
+      
+      // Cache the processed result
+      chartCacheRef.current.set(cacheKey, result);
+      return result;
     } catch (err) {
       console.error('Error processing chart data:', err);
       return [];
     }
-  }, [data, viewAll]);
+  }, [data, viewAll, cacheKey, isLoading, isTransitioning]);
 
-  if (isLoading) {
+  // Clear cache entries when they exceed a limit to prevent memory leaks
+  useEffect(() => {
+    if (chartCacheRef.current.size > 10) {
+      const keysToDelete = Array.from(chartCacheRef.current.keys()).slice(0, 5);
+      keysToDelete.forEach(key => chartCacheRef.current.delete(key));
+      console.log("Cleared old chart cache entries");
+    }
+  }, [processedData]);
+
+  const handleRefresh = () => {
+    // Clear the cache for this specific view when refreshing
+    chartCacheRef.current.delete(cacheKey);
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleTimeRangeChange = (newRange: string) => {
+    setTimeRange(newRange);
+  };
+
+  const showSkeleton = isLoading || isFetching || isTransitioning;
+
+  if (showSkeleton) {
     return (
-      <Card className="w-full h-[400px] relative overflow-hidden bg-[#F9F7F0]/50 border-[#9C7705]/10 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin text-[#3B751E] flex items-center justify-center">
-            <RefreshCw className="h-8 w-8" />
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="w-48">
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
-          <p className="text-[#9C7705]/70">Loading chart data...</p>
+          <Skeleton className="h-9 w-24 rounded-md" />
         </div>
-      </Card>
+        <Card className="p-4 bg-[#F9F7F0]/50 border-[#9C7705]/10">
+          <Skeleton className="w-full h-[400px] rounded-md" />
+        </Card>
+      </div>
     );
   }
 
@@ -89,7 +129,7 @@ export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => 
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <TimeRangeSelector value={timeRange} onValueChange={setTimeRange} />
+          <TimeRangeSelector value={timeRange} onValueChange={handleTimeRangeChange} />
           <Button 
             variant="outline" 
             size="sm" 
@@ -116,7 +156,7 @@ export const LeaderboardChart = ({ viewAll = false }: LeaderboardChartProps) => 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TimeRangeSelector value={timeRange} onValueChange={setTimeRange} />
+        <TimeRangeSelector value={timeRange} onValueChange={handleTimeRangeChange} />
         <Button 
           variant="outline" 
           size="sm" 

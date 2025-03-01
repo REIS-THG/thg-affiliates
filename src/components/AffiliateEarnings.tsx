@@ -1,13 +1,16 @@
 
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 interface AffiliateEarningsProps {
   viewType: 'personal' | 'all';
+  isTransitioning?: boolean;
 }
 
 interface EarningsData {
@@ -28,13 +31,17 @@ const fetchEarnings = async (): Promise<EarningsData> => {
   return mockEarnings;
 };
 
-export const AffiliateEarnings = ({ viewType }: AffiliateEarningsProps) => {
+export const AffiliateEarnings = ({ viewType, isTransitioning = false }: AffiliateEarningsProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["affiliateEarnings", viewType],
+    queryKey: ["affiliateEarnings", viewType, refreshTrigger],
     queryFn: fetchEarnings,
     refetchInterval: 30000,
     retry: 1,
+    staleTime: 60000, // Consider data fresh for 1 minute
     meta: {
       onError: (error: Error) => {
         console.error('Query error:', error);
@@ -47,13 +54,24 @@ export const AffiliateEarnings = ({ viewType }: AffiliateEarningsProps) => {
     }
   });
 
+  // Pre-fetch data for the other view type to make switching faster
+  useEffect(() => {
+    const otherViewType = viewType === 'personal' ? 'all' : 'personal';
+    queryClient.prefetchQuery({
+      queryKey: ["affiliateEarnings", otherViewType, refreshTrigger],
+      queryFn: fetchEarnings
+    });
+  }, [viewType, queryClient, refreshTrigger]);
+
   const handleRefresh = () => {
-    refetch();
+    setRefreshTrigger(prev => prev + 1);
     toast({
       title: "Refreshing data",
       description: "Getting the latest earnings information...",
     });
   };
+
+  const showSkeleton = isLoading || isTransitioning;
 
   if (error) {
     return (
@@ -75,37 +93,55 @@ export const AffiliateEarnings = ({ viewType }: AffiliateEarningsProps) => {
           variant="outline"
           size="sm"
           onClick={handleRefresh}
-          disabled={isLoading}
+          disabled={showSkeleton}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 mr-2 ${showSkeleton ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Earned Last 30 Days</h3>
-          {isLoading ? (
-            <Skeleton className="h-8 w-24 mt-1" />
-          ) : (
-            <p className="text-2xl font-bold">${data?.earnings_30_days?.toFixed(2) || '0.00'}</p>
-          )}
-        </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Earned This Month</h3>
-          {isLoading ? (
-            <Skeleton className="h-8 w-24 mt-1" />
-          ) : (
-            <p className="text-2xl font-bold">${data?.earnings_this_month?.toFixed(2) || '0.00'}</p>
-          )}
-        </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground">Total Earnings</h3>
-          {isLoading ? (
-            <Skeleton className="h-8 w-24 mt-1" />
-          ) : (
-            <p className="text-2xl font-bold">${data?.total_earnings?.toFixed(2) || '0.00'}</p>
-          )}
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0 }}
+        >
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Earned Last 30 Days</h3>
+            {showSkeleton ? (
+              <Skeleton className="h-8 w-24 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold">${data?.earnings_30_days?.toFixed(2) || '0.00'}</p>
+            )}
+          </Card>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Earned This Month</h3>
+            {showSkeleton ? (
+              <Skeleton className="h-8 w-24 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold">${data?.earnings_this_month?.toFixed(2) || '0.00'}</p>
+            )}
+          </Card>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Total Earnings</h3>
+            {showSkeleton ? (
+              <Skeleton className="h-8 w-24 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold">${data?.total_earnings?.toFixed(2) || '0.00'}</p>
+            )}
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
