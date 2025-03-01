@@ -65,7 +65,7 @@ export const DataTable = ({ viewAll = false, isTransitioning = false }: DataTabl
   return (
     <Card className="w-full border-[#9C7705]/10">
       <TableHeader onRefresh={handleRefresh} />
-      <UsageTable data={data.data} />
+      <UsageTable data={data.data} viewAll={viewAll} />
       <TablePagination 
         currentPage={currentPage}
         totalPages={totalPages}

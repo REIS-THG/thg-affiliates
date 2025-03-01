@@ -22,6 +22,7 @@ export interface CouponUsage {
 
 interface UsageTableProps {
   data: CouponUsage[];
+  viewAll?: boolean;
 }
 
 const getStatusColor = (status: string) => {
@@ -39,7 +40,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const UsageTable = ({ data }: UsageTableProps) => {
+export const UsageTable = ({ data, viewAll = false }: UsageTableProps) => {
   return (
     <Table>
       <TableHeader className="bg-[#3B751E]/10">
@@ -49,7 +50,9 @@ export const UsageTable = ({ data }: UsageTableProps) => {
           <TableHead className="text-[#3B751E]">Status</TableHead>
           <TableHead className="text-[#3B751E]">Payout Date</TableHead>
           <TableHead className="text-[#3B751E] text-right">Qty</TableHead>
-          <TableHead className="text-[#3B751E] text-right">Earnings</TableHead>
+          {!viewAll && (
+            <TableHead className="text-[#3B751E] text-right">Earnings</TableHead>
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -66,7 +69,9 @@ export const UsageTable = ({ data }: UsageTableProps) => {
               {row.payout_date ? new Date(row.payout_date).toLocaleDateString() : 'Pending'}
             </TableCell>
             <TableCell className="text-right">{row.quantity}</TableCell>
-            <TableCell className="text-right font-semibold text-[#3B751E]">${row.earnings.toFixed(2)}</TableCell>
+            {!viewAll && (
+              <TableCell className="text-right font-semibold text-[#3B751E]">${row.earnings.toFixed(2)}</TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>

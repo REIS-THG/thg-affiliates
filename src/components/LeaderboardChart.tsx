@@ -48,17 +48,26 @@ export const LeaderboardChart = ({ viewAll = false, isTransitioning = false }: L
           return coupon.data.map((d) => ({
             date: d.date,
             [coupon.code]: d.quantity,
-            [`${coupon.code}_earnings`]: d.earnings,
+            // Only include earnings data if not in viewAll mode or for the first coupon (user's own)
+            ...(!viewAll && { [`${coupon.code}_earnings`]: d.earnings }),
           }));
         }
         
         if (!coupon.data || !acc[0]) return acc;
         
-        return acc.map((item, i) => ({
-          ...item,
-          [coupon.code]: coupon.data[i]?.quantity || 0,
-          [`${coupon.code}_earnings`]: coupon.data[i]?.earnings || 0,
-        }));
+        return acc.map((item, i) => {
+          const newItem = {
+            ...item,
+            [coupon.code]: coupon.data[i]?.quantity || 0,
+          };
+          
+          // Only include earnings data if not in viewAll mode or for the first coupon (user's own)
+          if (!viewAll) {
+            newItem[`${coupon.code}_earnings`] = coupon.data[i]?.earnings || 0;
+          }
+          
+          return newItem;
+        });
       }, []);
       
       // Cache the processed result

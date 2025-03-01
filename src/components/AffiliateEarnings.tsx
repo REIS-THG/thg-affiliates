@@ -17,12 +17,18 @@ interface EarningsData {
   earnings_30_days: number;
   earnings_this_month: number;
   total_earnings: number;
+  purchases_30_days: number;
+  purchases_this_month: number;
+  total_purchases: number;
 }
 
 const mockEarnings: EarningsData = {
   earnings_30_days: 1862.00,
   earnings_this_month: 1274.00,
-  total_earnings: 8945.00
+  total_earnings: 8945.00,
+  purchases_30_days: 42,
+  purchases_this_month: 28,
+  total_purchases: 195
 };
 
 const fetchEarnings = async (): Promise<EarningsData> => {
@@ -72,6 +78,7 @@ export const AffiliateEarnings = ({ viewType, isTransitioning = false }: Affilia
   };
 
   const showSkeleton = isLoading || isTransitioning;
+  const isAllView = viewType === 'all';
 
   if (error) {
     return (
@@ -106,11 +113,18 @@ export const AffiliateEarnings = ({ viewType, isTransitioning = false }: Affilia
           transition={{ duration: 0.3, delay: 0 }}
         >
           <Card className="p-4">
-            <h3 className="text-sm font-medium text-muted-foreground">Earned Last 30 Days</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {isAllView ? "Purchases Last 30 Days" : "Earned Last 30 Days"}
+            </h3>
             {showSkeleton ? (
               <Skeleton className="h-8 w-24 mt-1" />
             ) : (
-              <p className="text-2xl font-bold">${data?.earnings_30_days?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold">
+                {isAllView 
+                  ? data?.purchases_30_days || '0'
+                  : `$${data?.earnings_30_days?.toFixed(2) || '0.00'}`
+                }
+              </p>
             )}
           </Card>
         </motion.div>
@@ -120,11 +134,18 @@ export const AffiliateEarnings = ({ viewType, isTransitioning = false }: Affilia
           transition={{ duration: 0.3, delay: 0.1 }}
         >
           <Card className="p-4">
-            <h3 className="text-sm font-medium text-muted-foreground">Earned This Month</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {isAllView ? "Purchases This Month" : "Earned This Month"}
+            </h3>
             {showSkeleton ? (
               <Skeleton className="h-8 w-24 mt-1" />
             ) : (
-              <p className="text-2xl font-bold">${data?.earnings_this_month?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold">
+                {isAllView 
+                  ? data?.purchases_this_month || '0'
+                  : `$${data?.earnings_this_month?.toFixed(2) || '0.00'}`
+                }
+              </p>
             )}
           </Card>
         </motion.div>
@@ -134,11 +155,18 @@ export const AffiliateEarnings = ({ viewType, isTransitioning = false }: Affilia
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           <Card className="p-4">
-            <h3 className="text-sm font-medium text-muted-foreground">Total Earnings</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {isAllView ? "Total Purchases" : "Total Earnings"}
+            </h3>
             {showSkeleton ? (
               <Skeleton className="h-8 w-24 mt-1" />
             ) : (
-              <p className="text-2xl font-bold">${data?.total_earnings?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold">
+                {isAllView 
+                  ? data?.total_purchases || '0'
+                  : `$${data?.total_earnings?.toFixed(2) || '0.00'}`
+                }
+              </p>
             )}
           </Card>
         </motion.div>
