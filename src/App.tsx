@@ -31,10 +31,11 @@ function App() {
             position="top-right" 
             closeButton
             toastOptions={{
-              style: { 
-                '--toast-text': 'var(--foreground)',
-                '--toast-border': '1px solid var(--border)',
-              }
+              style: {
+                // Use the proper CSS-in-JS format without quotes around property names
+                "--toast-text": "var(--foreground)",
+                "--toast-border": "1px solid var(--border)",
+              } as React.CSSProperties
             }}
           />
         </GlobalErrorBoundary>
