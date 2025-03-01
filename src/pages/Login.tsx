@@ -6,6 +6,9 @@ import { supabase } from "../integrations/supabase/client";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     // Check if we have saved credentials
@@ -25,6 +29,9 @@ const Login = () => {
       setCouponCode(savedCoupon);
       setRememberMe(true);
     }
+    
+    // Simulate checking auth status
+    setTimeout(() => setIsInitializing(false), 300);
   }, []);
 
   const getErrorMessage = (error: Error | string): string => {
@@ -36,6 +43,10 @@ const Login = () => {
       return "This coupon code doesn't exist or isn't active. Please check and try again.";
     } else if (message.includes('network')) {
       return "Network error. Please check your internet connection and try again.";
+    } else if (message.includes('rate limit')) {
+      return "Too many login attempts. Please try again in a few minutes.";
+    } else if (message.includes('invalid')) {
+      return "Invalid login credentials. Please check your coupon code and password.";
     }
     
     return message || "An unknown error occurred. Please try again.";
@@ -90,6 +101,26 @@ const Login = () => {
     }
   };
 
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-[#F9F7F0] flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-8 border border-[#9C7705]/10">
+          <div className="space-y-4">
+            <div className="flex justify-center mb-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+            </div>
+            <Skeleton className="h-6 w-32 mx-auto" />
+            <Skeleton className="h-4 w-48 mx-auto" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F9F7F0] flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-8 border border-[#9C7705]/10">
@@ -113,15 +144,15 @@ const Login = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="couponCode" className="block text-sm font-medium text-[#3B751E]">
+            <Label htmlFor="couponCode" className="text-[#3B751E]">
               Coupon Code
-            </label>
-            <input
+            </Label>
+            <Input
               id="couponCode"
               type="text"
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 border border-[#9C7705]/20 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50"
+              className="border-[#9C7705]/20 focus:ring-[#3B751E]/50"
               placeholder="Enter your coupon code"
               required
               disabled={isLoading}
@@ -130,16 +161,16 @@ const Login = () => {
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium text-[#3B751E]">
+            <Label htmlFor="password" className="text-[#3B751E]">
               Password
-            </label>
+            </Label>
             <div className="relative">
-              <input
+              <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-[#9C7705]/20 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50"
+                className="border-[#9C7705]/20 focus:ring-[#3B751E]/50"
                 placeholder="Enter your password"
                 required
                 disabled={isLoading}
@@ -163,13 +194,14 @@ const Login = () => {
                 checked={rememberMe} 
                 onCheckedChange={(checked) => setRememberMe(checked === true)}
                 className="border-[#9C7705]/30 data-[state=checked]:bg-[#3B751E] data-[state=checked]:border-[#3B751E]"
+                aria-label="Remember me"
               />
-              <label 
+              <Label 
                 htmlFor="rememberMe" 
                 className="text-sm text-[#9C7705]/70 cursor-pointer"
               >
                 Remember me
-              </label>
+              </Label>
             </div>
             <Link
               to="/forgot-password"
@@ -183,12 +215,13 @@ const Login = () => {
             type="submit"
             disabled={isLoading}
             className="w-full py-2 px-4 bg-[#3B751E] hover:bg-[#3B751E]/90 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50 transition-colors disabled:opacity-50"
+            aria-live="polite"
           >
             {isLoading ? (
-              <>
+              <div className="flex items-center justify-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
+                <span>Signing in...</span>
+              </div>
             ) : (
               "Sign In"
             )}
