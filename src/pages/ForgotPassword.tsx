@@ -7,31 +7,75 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 
 const ForgotPassword = () => {
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const validateCouponExists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('thg_affiliate_users')
+        .select('coupon')
+        .eq('coupon', couponCode)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (!data) {
+        toast.error("Coupon code not found. Please check and try again.");
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error validating coupon code:", error);
+      toast.error("Error validating coupon code. Please try again.");
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Show confirmation dialog
+    if (await validateCouponExists()) {
+      setShowConfirmDialog(true);
+    }
+  };
+
+  const submitPasswordResetRequest = async () => {
     setLoading(true);
 
     try {
-      // Store the request in Supabase
-      const { error: dbError } = await supabase
-        .from('password_change_history')
-        .insert([{ 
-          coupon_code: couponCode,
-          changed_by: 'forgot_password_request' 
-        }]);
-
-      if (dbError) throw dbError;
+      // Call the edge function to send the password reset email
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ couponCode }),
+        }
+      );
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to submit password reset request");
+      }
 
       setSubmitted(true);
-      toast.success("Password reset request submitted");
+      toast.success("Password reset request submitted", {
+        description: "Our team will contact you shortly.",
+      });
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error submitting password reset request:", error);
       toast.error("Failed to submit request. Please try again.");
     } finally {
       setLoading(false);
@@ -104,6 +148,17 @@ const ForgotPassword = () => {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        title="Submit Password Reset Request"
+        description="Are you sure you want to request a password reset? Our team will contact you to verify your identity."
+        confirmText="Submit Request"
+        cancelText="Cancel"
+        variant="default"
+        onConfirm={submitPasswordResetRequest}
+      />
     </div>
   );
 };
