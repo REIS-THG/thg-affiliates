@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -63,6 +64,8 @@ const Login = () => {
         localStorage.setItem('rememberMe', 'false');
       }
 
+      console.log("Attempting login with:", { couponCode, passwordLength: password.length });
+      
       const { data, error } = await supabase
         .from('thg_affiliate_users')
         .select('*')
@@ -70,11 +73,15 @@ const Login = () => {
         .eq('password', password)
         .maybeSingle();
 
+      console.log("Login response:", { data: !!data, error });
+
       if (error) {
+        console.error("Supabase error:", error);
         throw new Error(error.message);
       }
 
       if (!data) {
+        console.error("No matching user found");
         throw new Error("Invalid coupon code or password");
       }
 
@@ -145,7 +152,7 @@ const Login = () => {
               id="couponCode"
               type="text"
               value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              onChange={(e) => setCouponCode(e.target.value)}
               className="border-[#9C7705]/20 focus:ring-[#3B751E]/50"
               placeholder="Enter your coupon code"
               required
