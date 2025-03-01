@@ -24,13 +24,15 @@ export const DashboardContent = ({ viewAll, couponCode, isTransitioning = false 
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       <motion.section 
         custom={0}
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white/70 p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm"
+        className="bg-white/70 p-4 md:p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm"
+        aria-label="Affiliate Earnings"
+        tabIndex={0}
       >
         <AffiliateEarnings viewType={viewAll ? 'all' : 'personal'} isTransitioning={isTransitioning} />
       </motion.section>
@@ -40,7 +42,9 @@ export const DashboardContent = ({ viewAll, couponCode, isTransitioning = false 
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white/70 p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm"
+        className="bg-white/70 p-4 md:p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm"
+        aria-label="Usage Analytics"
+        tabIndex={0}
       >
         <UsageAnalytics couponCode={couponCode} viewAll={viewAll} isTransitioning={isTransitioning} />
       </motion.section>
@@ -50,7 +54,9 @@ export const DashboardContent = ({ viewAll, couponCode, isTransitioning = false 
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white/70 p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm"
+        className="bg-white/70 p-4 md:p-6 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm"
+        aria-label="Usage History"
+        tabIndex={0}
       >
         <UsageHistory viewAll={viewAll} isTransitioning={isTransitioning} />
       </motion.section>

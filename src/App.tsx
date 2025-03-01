@@ -15,6 +15,9 @@ function App() {
     <Router>
       <ErrorProvider>
         <GlobalErrorBoundary>
+          <div className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:z-50 focus-visible:bg-white focus-visible:p-4 focus-visible:text-[#3B751E] focus-visible:border focus-visible:border-[#3B751E] focus-visible:rounded">
+            <a href="#main-content">Skip to content</a>
+          </div>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -23,7 +26,17 @@ function App() {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <Toaster richColors position="top-right" />
+          <Toaster 
+            richColors 
+            position="top-right" 
+            closeButton
+            toastOptions={{
+              style: { 
+                '--toast-text': 'var(--foreground)',
+                '--toast-border': '1px solid var(--border)',
+              }
+            }}
+          />
         </GlobalErrorBoundary>
       </ErrorProvider>
     </Router>

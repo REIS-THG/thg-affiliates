@@ -53,7 +53,9 @@ const Dashboard = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="container mx-auto p-6"
+                className="container mx-auto px-4 sm:px-6 py-4 md:py-6"
+                role="main"
+                aria-label="Dashboard content"
               >
                 <DashboardHeader 
                   isAdmin={isAdmin}

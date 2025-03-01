@@ -42,39 +42,41 @@ const getStatusColor = (status: string) => {
 
 export const UsageTable = ({ data, viewAll = false }: UsageTableProps) => {
   return (
-    <Table>
-      <TableHeader className="bg-[#3B751E]/10">
-        <TableRow>
-          <TableHead className="text-[#3B751E]">Product Name</TableHead>
-          <TableHead className="text-[#3B751E]">Purchase Date</TableHead>
-          <TableHead className="text-[#3B751E]">Status</TableHead>
-          <TableHead className="text-[#3B751E]">Payout Date</TableHead>
-          <TableHead className="text-[#3B751E] text-right">Qty</TableHead>
-          {!viewAll && (
-            <TableHead className="text-[#3B751E] text-right">Earnings</TableHead>
-          )}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((row, index) => (
-          <TableRow key={index} className="hover:bg-[#F9F7F0]">
-            <TableCell className="font-medium">{row.product_name}</TableCell>
-            <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
-            <TableCell>
-              <Badge className={cn("capitalize", getStatusColor(row.order_status))}>
-                {row.order_status}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              {row.payout_date ? new Date(row.payout_date).toLocaleDateString() : 'Pending'}
-            </TableCell>
-            <TableCell className="text-right">{row.quantity}</TableCell>
+    <div className="overflow-x-auto">
+      <Table aria-label="Coupon usage data">
+        <TableHeader className="bg-[#3B751E]/10">
+          <TableRow>
+            <TableHead className="text-[#3B751E] font-medium">Product Name</TableHead>
+            <TableHead className="text-[#3B751E] font-medium">Purchase Date</TableHead>
+            <TableHead className="text-[#3B751E] font-medium">Status</TableHead>
+            <TableHead className="text-[#3B751E] font-medium">Payout Date</TableHead>
+            <TableHead className="text-[#3B751E] font-medium text-right">Qty</TableHead>
             {!viewAll && (
-              <TableCell className="text-right font-semibold text-[#3B751E]">${row.earnings.toFixed(2)}</TableCell>
+              <TableHead className="text-[#3B751E] font-medium text-right">Earnings</TableHead>
             )}
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {data.map((row, index) => (
+            <TableRow key={index} className="hover:bg-[#F9F7F0]">
+              <TableCell className="font-medium">{row.product_name}</TableCell>
+              <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <Badge className={cn("capitalize", getStatusColor(row.order_status))}>
+                  {row.order_status}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {row.payout_date ? new Date(row.payout_date).toLocaleDateString() : 'Pending'}
+              </TableCell>
+              <TableCell className="text-right">{row.quantity}</TableCell>
+              {!viewAll && (
+                <TableCell className="text-right font-semibold text-[#3B751E]">${row.earnings.toFixed(2)}</TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };

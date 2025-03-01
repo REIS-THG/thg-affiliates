@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,26 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Improved focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-[#3B751E] ring-offset-2;
+  }
+  
+  /* Skip link styles */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:z-50;
+  }
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .section-padding {
+    @apply py-4 px-4 sm:px-6 md:py-6 md:px-8 lg:px-12;
+  }
+  
+  .responsive-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 }
