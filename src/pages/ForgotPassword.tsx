@@ -8,12 +8,14 @@ import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { useErrorContext } from "@/contexts/ErrorContext";
 
 const ForgotPassword = () => {
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const { handleApiError } = useErrorContext();
 
   const validateCouponExists = async () => {
     try {
@@ -32,8 +34,7 @@ const ForgotPassword = () => {
       
       return true;
     } catch (error) {
-      console.error("Error validating coupon code:", error);
-      toast.error("Error validating coupon code. Please try again.");
+      handleApiError(error, "Error validating coupon code. Please try again.");
       return false;
     }
   };
@@ -64,19 +65,19 @@ const ForgotPassword = () => {
         }
       );
       
-      const result = await response.json();
-      
       if (!response.ok) {
-        throw new Error(result.error || "Failed to submit password reset request");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit password reset request");
       }
+      
+      const result = await response.json();
 
       setSubmitted(true);
       toast.success("Password reset request submitted", {
         description: "Our team will contact you shortly.",
       });
     } catch (error) {
-      console.error("Error submitting password reset request:", error);
-      toast.error("Failed to submit request. Please try again.");
+      handleApiError(error, "Failed to submit request. Please try again later.");
     } finally {
       setLoading(false);
     }

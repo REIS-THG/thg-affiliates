@@ -1,10 +1,12 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client"; // Updated to use the correct Supabase client
+import { supabase } from "@/integrations/supabase/client";
 import { generateMockData } from "@/utils/mockDataGenerator";
 import { getStartDate } from "@/utils/dateUtils";
 import { useEffect } from "react";
 import type { CouponUsage } from "@/types/coupon";
+import { supabaseService } from "@/services/SupabaseService";
+import { useErrorContext } from "@/contexts/ErrorContext";
 
 const fetchCouponData = async (days: number, viewAll: boolean = false, refreshKey: number = 0): Promise<CouponUsage[]> => {
   try {
@@ -28,70 +30,62 @@ const fetchCouponData = async (days: number, viewAll: boolean = false, refreshKe
       is_admin: user.role === 'admin'
     });
     
-    try {
-      // Query coupon usage data
-      const query = supabase
-        .from('coupon_usage')
-        .select('code, date, quantity, earnings')
-        .gte('date', startDate)
-        .order('date', { ascending: true });
-        
-      // If not admin and not viewAll, filter by user's coupon code
-      if (user.role !== 'admin' && !viewAll) {
-        query.eq('code', user.coupon_code);
-      }
-      
-      const { data: couponData, error } = await query;
-
-      if (error) {
-        console.error('Supabase error:', error);
-        return generateMockData(days);
-      }
-
-      if (!couponData || couponData.length === 0) {
-        console.log('No coupon data found, using mock data');
-        return generateMockData(days);
-      }
-
-      console.log('Coupon data received:', { count: couponData.length, sample: couponData[0] });
-
-      // Group the data by coupon code
-      const groupedData = couponData.reduce((acc: { [key: string]: any }, curr) => {
-        if (!acc[curr.code]) {
-          acc[curr.code] = {
-            code: curr.code,
-            data: []
-          };
+    return await supabaseService.safeQuery(
+      async () => {
+        // Query coupon usage data
+        const query = supabase
+          .from('coupon_usage')
+          .select('code, date, quantity, earnings')
+          .gte('date', startDate)
+          .order('date', { ascending: true });
+          
+        // If not admin and not viewAll, filter by user's coupon code
+        if (user.role !== 'admin' && !viewAll) {
+          query.eq('code', user.coupon_code);
         }
         
-        // Check if this date already exists in the data array
-        const existingDateIndex = acc[curr.code].data.findIndex((item: any) => item.date === curr.date);
-        
-        if (existingDateIndex >= 0) {
-          // Update existing date with cumulative values
-          acc[curr.code].data[existingDateIndex].quantity += (curr.quantity || 0);
-          acc[curr.code].data[existingDateIndex].earnings += (curr.earnings || 0);
-        } else {
-          // Add new date entry
-          acc[curr.code].data.push({
-            date: curr.date,
-            quantity: curr.quantity || 0,
-            earnings: curr.earnings || 0
-          });
-        }
-        
-        return acc;
-      }, {});
+        const { data: couponData, error } = await query;
 
-      // Convert the grouped data to an array
-      const result = Object.values(groupedData);
-      console.log('Processed coupon data:', result);
-      
-      return result as CouponUsage[];
-    } catch (fetchError) {
-      console.error('Error in Supabase fetch:', fetchError);
-      return generateMockData(days);
-    }
+        if (error) throw error;
+
+        if (!couponData || couponData.length === 0) {
+          throw new Error('No coupon data found for the selected time range');
+        }
+
+        // Group the data by coupon code
+        const groupedData = couponData.reduce((acc: { [key: string]: any }, curr) => {
+          if (!acc[curr.code]) {
+            acc[curr.code] = {
+              code: curr.code,
+              data: []
+            };
+          }
+          
+          // Check if this date already exists in the data array
+          const existingDateIndex = acc[curr.code].data.findIndex((item: any) => item.date === curr.date);
+          
+          if (existingDateIndex >= 0) {
+            // Update existing date with cumulative values
+            acc[curr.code].data[existingDateIndex].quantity += (curr.quantity || 0);
+            acc[curr.code].data[existingDateIndex].earnings += (curr.earnings || 0);
+          } else {
+            // Add new date entry
+            acc[curr.code].data.push({
+              date: curr.date,
+              quantity: curr.quantity || 0,
+              earnings: curr.earnings || 0
+            });
+          }
+          
+          return acc;
+        }, {});
+
+        // Convert the grouped data to an array
+        return Object.values(groupedData) as CouponUsage[];
+      },
+      generateMockData(days),
+      'Failed to fetch coupon data'
+    );
   } catch (error) {
     console.error('Error fetching coupon data:', error);
     return generateMockData(days);
@@ -100,12 +94,18 @@ const fetchCouponData = async (days: number, viewAll: boolean = false, refreshKe
 
 export const useCouponData = (timeRange: string, viewAll: boolean = false, refreshKey: number = 0) => {
   const queryClient = useQueryClient();
+  const { handleApiError } = useErrorContext();
 
   const query = useQuery({
     queryKey: ["couponData", timeRange, viewAll, refreshKey],
     queryFn: () => fetchCouponData(parseInt(timeRange), viewAll, refreshKey),
     refetchInterval: 60000, // Refresh every minute
     staleTime: 30000, // Consider data stale after 30 seconds
+    meta: {
+      onError: (error: Error) => {
+        handleApiError(error, "Failed to load coupon data");
+      }
+    }
   });
 
   useEffect(() => {
@@ -126,11 +126,11 @@ export const useCouponData = (timeRange: string, viewAll: boolean = false, refre
         subscription.unsubscribe();
       };
     } catch (error) {
-      console.error('Error setting up real-time subscription:', error);
+      handleApiError(error, "Failed to set up real-time subscription");
       // Return empty cleanup function if subscription fails
       return () => {};
     }
-  }, [queryClient]);
+  }, [queryClient, handleApiError]);
 
   return query;
 };
