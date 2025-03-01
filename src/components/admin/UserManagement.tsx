@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Edit, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertCircle, Edit, Plus, RefreshCw, Trash2, Shield, ShieldAlert } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Pagination,
@@ -35,6 +34,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface AffiliateUser {
   id: string;
@@ -508,46 +508,38 @@ export const UserManagement = () => {
                         </DialogContent>
                       </Dialog>
                       
-                      <Dialog open={isDeleteDialogOpen && currentAffiliate?.id === affiliate.id} onOpenChange={(open) => {
-                        setIsDeleteDialogOpen(open);
-                        if (!open) setCurrentAffiliate(null);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                              setCurrentAffiliate(affiliate);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Delete Affiliate</DialogTitle>
-                            <DialogDescription>
-                              Are you sure you want to delete the affiliate with coupon code: {currentAffiliate?.coupon}?
-                            </DialogDescription>
-                          </DialogHeader>
-                          <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Warning</AlertTitle>
-                            <AlertDescription>
-                              This action is irreversible. All data associated with this affiliate will be permanently deleted.
-                            </AlertDescription>
-                          </Alert>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                              Cancel
-                            </Button>
-                            <Button variant="destructive" onClick={handleDeleteAffiliate}>
-                              Delete
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentAffiliate(affiliate);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      
+                      <ConfirmDialog
+                        open={isDeleteDialogOpen && currentAffiliate?.id === affiliate.id}
+                        onOpenChange={(open) => {
+                          setIsDeleteDialogOpen(open);
+                          if (!open) setCurrentAffiliate(null);
+                        }}
+                        title="Delete Affiliate"
+                        description={`Are you sure you want to delete the affiliate with coupon code: ${currentAffiliate?.coupon}?`}
+                        confirmText="Delete"
+                        cancelText="Cancel"
+                        variant="destructive"
+                        onConfirm={handleDeleteAffiliate}
+                      >
+                        <Alert variant="destructive" className="mt-4">
+                          <ShieldAlert className="h-4 w-4" />
+                          <AlertTitle>Warning</AlertTitle>
+                          <AlertDescription>
+                            This action is irreversible. All data associated with this affiliate will be permanently deleted.
+                          </AlertDescription>
+                        </Alert>
+                      </ConfirmDialog>
                     </div>
                   </TableCell>
                 </TableRow>
