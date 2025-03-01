@@ -13,6 +13,7 @@ const AdminPanel = () => {
   const { toast: uiToast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [adminPermissions, setAdminPermissions] = useState<Record<string, boolean>>({});
   const [adminStats, setAdminStats] = useState({
     totalAffiliates: 0,
     activeAffiliates: 0,
@@ -23,11 +24,12 @@ const AdminPanel = () => {
   useEffect(() => {
     const checkAdminAuth = async () => {
       setIsLoading(true);
-      const userStr = localStorage.getItem('affiliateUser');
-      if (!userStr) {
+      const adminUserStr = localStorage.getItem('adminUser');
+      
+      if (!adminUserStr) {
         uiToast({
           title: "Authentication Required",
-          description: "Please log in to access the dashboard",
+          description: "Please log in to access the admin panel",
           variant: "destructive",
         });
         navigate('/login');
@@ -35,11 +37,27 @@ const AdminPanel = () => {
       }
 
       try {
-        const user = JSON.parse(userStr);
-        if (user.role !== "admin") {
-          throw new Error("Admin access required");
+        const adminUser = JSON.parse(adminUserStr);
+        
+        if (!adminUser.username || !adminUser.id) {
+          throw new Error("Invalid admin data");
         }
+        
+        // Verify admin in database
+        const { data: adminData, error: adminError } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('id', adminUser.id)
+          .eq('username', adminUser.username)
+          .eq('is_active', true)
+          .maybeSingle();
+          
+        if (adminError || !adminData) {
+          throw new Error("Admin verification failed");
+        }
+        
         setIsAdmin(true);
+        setAdminPermissions(adminData.permissions || {});
         
         // Fetch admin statistics
         try {
@@ -99,7 +117,7 @@ const AdminPanel = () => {
           description: "You need admin privileges to access this page",
           variant: "destructive",
         });
-        navigate('/dashboard');
+        navigate('/login');
       } finally {
         setIsLoading(false);
       }
@@ -109,7 +127,7 @@ const AdminPanel = () => {
   }, [navigate, uiToast]);
 
   const handleLogout = () => {
-    localStorage.removeItem('affiliateUser');
+    localStorage.removeItem('adminUser');
     uiToast({
       title: "Success",
       description: "Successfully logged out",
@@ -135,7 +153,7 @@ const AdminPanel = () => {
       <div className="container mx-auto p-6">
         <AdminHeader />
         <AdminStats adminStats={adminStats} />
-        <AdminTabs />
+        <AdminTabs permissions={adminPermissions} />
       </div>
     </div>
   );

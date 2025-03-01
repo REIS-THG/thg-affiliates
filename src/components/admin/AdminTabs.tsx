@@ -1,56 +1,101 @@
 
-import { lazy, Suspense } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, FileText, Settings } from "lucide-react";
+import { UserManagement } from "@/components/admin/UserManagement";
+import { DataExport } from "@/components/admin/DataExport";
+import { SystemSettings } from "@/components/admin/SystemSettings";
+import { AlertCircle } from "lucide-react";
 
-// Lazy load tab content components
-const UserManagement = lazy(() => import("@/components/admin/UserManagement").then(module => ({ default: module.UserManagement })));
-const DataExport = lazy(() => import("@/components/admin/DataExport").then(module => ({ default: module.DataExport })));
-const SystemSettings = lazy(() => import("@/components/admin/SystemSettings").then(module => ({ default: module.SystemSettings })));
+interface AdminTabsProps {
+  permissions?: Record<string, boolean>;
+}
 
-const TabLoadingFallback = () => (
-  <div className="flex items-center justify-center p-8">
-    <div className="animate-pulse text-[#3B751E] text-xl">Loading content...</div>
-  </div>
-);
+export const AdminTabs = ({ permissions = {} }: AdminTabsProps) => {
+  const [activeTab, setActiveTab] = useState("users");
+  
+  // Default to true if permissions object is empty (backward compatibility)
+  const hasUserPermission = Object.keys(permissions).length === 0 || permissions.users;
+  const hasExportPermission = Object.keys(permissions).length === 0 || permissions.export;
+  const hasSettingsPermission = Object.keys(permissions).length === 0 || permissions.settings;
 
-export const AdminTabs = () => {
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
-    <div className="bg-white/70 rounded-lg shadow-sm border border-[#9C7705]/10 backdrop-blur-sm">
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList className="w-full border-b border-[#9C7705]/10 rounded-t-lg rounded-b-none bg-[#F9F7F0] p-0">
-          <TabsTrigger value="users" className="flex-1 rounded-none rounded-tl-lg data-[state=active]:bg-white data-[state=active]:shadow-none py-3">
-            <User className="w-4 h-4 mr-2" />
+    <div className="mt-8">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="grid grid-cols-3 w-full max-w-2xl mx-auto mb-8">
+          <TabsTrigger 
+            value="users" 
+            disabled={!hasUserPermission}
+            className="data-[state=active]:bg-[#3B751E] data-[state=active]:text-white"
+          >
             User Management
           </TabsTrigger>
-          <TabsTrigger value="export" className="flex-1 rounded-none data-[state=active]:bg-white data-[state=active]:shadow-none py-3">
-            <FileText className="w-4 h-4 mr-2" />
+          <TabsTrigger 
+            value="export" 
+            disabled={!hasExportPermission}
+            className="data-[state=active]:bg-[#3B751E] data-[state=active]:text-white"
+          >
             Data Export
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex-1 rounded-none rounded-tr-lg data-[state=active]:bg-white data-[state=active]:shadow-none py-3">
-            <Settings className="w-4 h-4 mr-2" />
+          <TabsTrigger 
+            value="settings" 
+            disabled={!hasSettingsPermission}
+            className="data-[state=active]:bg-[#3B751E] data-[state=active]:text-white"
+          >
             System Settings
           </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="users" className="p-6 focus-visible:outline-none focus-visible:ring-0">
-          <Suspense fallback={<TabLoadingFallback />}>
+
+        {hasUserPermission ? (
+          <TabsContent value="users" className="mt-4">
             <UserManagement />
-          </Suspense>
-        </TabsContent>
+          </TabsContent>
+        ) : (
+          <TabsContent value="users" className="mt-4">
+            <PermissionDenied feature="User Management" />
+          </TabsContent>
+        )}
         
-        <TabsContent value="export" className="p-6 focus-visible:outline-none focus-visible:ring-0">
-          <Suspense fallback={<TabLoadingFallback />}>
+        {hasExportPermission ? (
+          <TabsContent value="export" className="mt-4">
             <DataExport />
-          </Suspense>
-        </TabsContent>
+          </TabsContent>
+        ) : (
+          <TabsContent value="export" className="mt-4">
+            <PermissionDenied feature="Data Export" />
+          </TabsContent>
+        )}
         
-        <TabsContent value="settings" className="p-6 focus-visible:outline-none focus-visible:ring-0">
-          <Suspense fallback={<TabLoadingFallback />}>
+        {hasSettingsPermission ? (
+          <TabsContent value="settings" className="mt-4">
             <SystemSettings />
-          </Suspense>
-        </TabsContent>
+          </TabsContent>
+        ) : (
+          <TabsContent value="settings" className="mt-4">
+            <PermissionDenied feature="System Settings" />
+          </TabsContent>
+        )}
       </Tabs>
+    </div>
+  );
+};
+
+// Component to display when permission is denied
+const PermissionDenied = ({ feature }: { feature: string }) => {
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-8 text-center">
+      <div className="flex justify-center mb-4">
+        <AlertCircle className="h-12 w-12 text-amber-500" />
+      </div>
+      <h3 className="text-xl font-semibold text-amber-800 mb-2">Permission Required</h3>
+      <p className="text-amber-700">
+        You don't have permission to access the {feature} feature.
+        Please contact a system administrator if you need access.
+      </p>
     </div>
   );
 };
