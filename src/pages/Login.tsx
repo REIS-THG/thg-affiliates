@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,7 +20,6 @@ const Login = () => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    // Check if we have saved credentials
     const savedCoupon = localStorage.getItem('rememberedCoupon');
     const savedRememberMe = localStorage.getItem('rememberMe') === 'true';
     
@@ -30,7 +28,6 @@ const Login = () => {
       setRememberMe(true);
     }
     
-    // Simulate checking auth status
     setTimeout(() => setIsInitializing(false), 300);
   }, []);
 
@@ -58,7 +55,6 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Handle remember me option
       if (rememberMe) {
         localStorage.setItem('rememberedCoupon', couponCode);
         localStorage.setItem('rememberMe', 'true');
@@ -67,7 +63,6 @@ const Login = () => {
         localStorage.setItem('rememberMe', 'false');
       }
 
-      // Fetch user data from Supabase
       const { data, error } = await supabase
         .from('thg_affiliate_users')
         .select('*')
@@ -83,7 +78,6 @@ const Login = () => {
         throw new Error("Invalid coupon code or password");
       }
 
-      // Store user data in localStorage
       localStorage.setItem('affiliateUser', JSON.stringify({
         coupon_code: data.coupon,
         role: data.role || 'affiliate'
@@ -227,15 +221,6 @@ const Login = () => {
             )}
           </Button>
         </form>
-        
-        <div className="mt-6 text-center">
-          <p className="text-sm text-[#9C7705]/70">
-            Don't have an account?{" "}
-            <span className="text-[#3B751E] font-medium">
-              Contact support
-            </span>
-          </p>
-        </div>
       </div>
     </div>
   );
