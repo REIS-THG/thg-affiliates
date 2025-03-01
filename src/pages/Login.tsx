@@ -1,9 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,6 +14,32 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    // Check if we have saved credentials
+    const savedCoupon = localStorage.getItem('rememberedCoupon');
+    const savedRememberMe = localStorage.getItem('rememberMe') === 'true';
+    
+    if (savedCoupon && savedRememberMe) {
+      setCouponCode(savedCoupon);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const getErrorMessage = (error: Error | string): string => {
+    const message = typeof error === 'string' ? error : error.message;
+    
+    if (message.includes('password')) {
+      return "The password is incorrect. Please try again.";
+    } else if (message.includes('not found') || message.includes('Invalid coupon')) {
+      return "This coupon code doesn't exist or isn't active. Please check and try again.";
+    } else if (message.includes('network')) {
+      return "Network error. Please check your internet connection and try again.";
+    }
+    
+    return message || "An unknown error occurred. Please try again.";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +47,15 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Handle remember me option
+      if (rememberMe) {
+        localStorage.setItem('rememberedCoupon', couponCode);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberedCoupon');
+        localStorage.setItem('rememberMe', 'false');
+      }
+
       // Fetch user data from Supabase
       const { data, error } = await supabase
         .from('thg_affiliate_users')
@@ -35,17 +72,18 @@ const Login = () => {
         throw new Error("Invalid coupon code or password");
       }
 
-      // Store user data in localStorage (consider using a more secure method in production)
+      // Store user data in localStorage
       localStorage.setItem('affiliateUser', JSON.stringify({
         coupon_code: data.coupon,
         role: data.role || 'affiliate'
       }));
 
-      toast.success("Login successful!");
+      toast.success("Login successful! Redirecting to dashboard...");
       navigate('/dashboard');
     } catch (error) {
       console.error("Login error:", error);
-      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      const errorMessage = getErrorMessage(error instanceof Error ? error : String(error));
+      setError(errorMessage);
       toast.error("Login failed");
     } finally {
       setIsLoading(false);
@@ -86,6 +124,8 @@ const Login = () => {
               className="w-full px-3 py-2 border border-[#9C7705]/20 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50"
               placeholder="Enter your coupon code"
               required
+              disabled={isLoading}
+              aria-describedby="coupon-error"
             />
           </div>
           
@@ -102,18 +142,35 @@ const Login = () => {
                 className="w-full px-3 py-2 border border-[#9C7705]/20 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50"
                 placeholder="Enter your password"
                 required
+                disabled={isLoading}
+                aria-describedby="password-error"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#9C7705]/70"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
           
-          <div className="text-right">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="rememberMe" 
+                checked={rememberMe} 
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+                className="border-[#9C7705]/30 data-[state=checked]:bg-[#3B751E] data-[state=checked]:border-[#3B751E]"
+              />
+              <label 
+                htmlFor="rememberMe" 
+                className="text-sm text-[#9C7705]/70 cursor-pointer"
+              >
+                Remember me
+              </label>
+            </div>
             <Link
               to="/forgot-password"
               className="text-sm text-[#3B751E] hover:underline"
@@ -122,13 +179,20 @@ const Login = () => {
             </Link>
           </div>
           
-          <button
+          <Button
             type="submit"
             disabled={isLoading}
             className="w-full py-2 px-4 bg-[#3B751E] hover:bg-[#3B751E]/90 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[#3B751E]/50 transition-colors disabled:opacity-50"
           >
-            {isLoading ? "Signing in..." : "Sign In"}
-          </button>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </Button>
         </form>
         
         <div className="mt-6 text-center">
