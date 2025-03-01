@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminHeader, AdminStats } from "@/components/admin/AdminHeader";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import * as bcrypt from 'bcryptjs';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -20,6 +21,55 @@ const AdminPanel = () => {
     totalEarnings: 0,
     pendingPayouts: 0
   });
+  const [sessionTimeout, setSessionTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Session timeout handling
+  const resetSessionTimeout = () => {
+    // Clear existing timeout if any
+    if (sessionTimeout) {
+      clearTimeout(sessionTimeout);
+    }
+    
+    // Set new timeout (60 minutes by default)
+    const timeout = setTimeout(() => {
+      handleLogout();
+      uiToast({
+        title: "Session Expired",
+        description: "Your session has expired due to inactivity",
+        variant: "destructive",
+      });
+    }, 60 * 60 * 1000); // 60 minutes
+    
+    setSessionTimeout(timeout);
+  };
+
+  // Add event listeners for user activity
+  useEffect(() => {
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    
+    const handleUserActivity = () => {
+      resetSessionTimeout();
+    };
+    
+    // Add event listeners
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleUserActivity);
+    });
+    
+    // Initial session timeout
+    resetSessionTimeout();
+    
+    // Cleanup event listeners on unmount
+    return () => {
+      if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+      }
+      
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleUserActivity);
+      });
+    };
+  }, [sessionTimeout]);
 
   useEffect(() => {
     const checkAdminAuth = async () => {
@@ -56,6 +106,12 @@ const AdminPanel = () => {
           throw new Error("Admin verification failed");
         }
         
+        // Update last login time
+        await supabase
+          .from('admin_users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', adminUser.id);
+        
         setIsAdmin(true);
         
         // Safely cast permissions to Record<string, boolean> or use default
@@ -64,6 +120,9 @@ const AdminPanel = () => {
         
         // Fetch admin statistics
         try {
+          // Log admin login for audit trail
+          console.log(`Admin login: ${adminUser.username} at ${new Date().toISOString()}`);
+          
           // Get total affiliates count
           const { count: totalAffiliates, error: countError } = await supabase
             .from('thg_affiliate_users')
@@ -130,6 +189,9 @@ const AdminPanel = () => {
   }, [navigate, uiToast]);
 
   const handleLogout = () => {
+    if (sessionTimeout) {
+      clearTimeout(sessionTimeout);
+    }
     localStorage.removeItem('adminUser');
     uiToast({
       title: "Success",

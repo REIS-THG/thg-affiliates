@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { DataExport } from "@/components/admin/DataExport";
 import { SystemSettings } from "@/components/admin/SystemSettings";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Shield } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AdminTabsProps {
   permissions?: Record<string, boolean>;
@@ -20,11 +21,21 @@ export const AdminTabs = ({ permissions = {} }: AdminTabsProps) => {
 
   // Handle tab change
   const handleTabChange = (value: string) => {
+    // Log for audit purposes
+    console.log(`Admin tab changed to: ${value}`);
     setActiveTab(value);
   };
 
   return (
     <div className="mt-8">
+      <Alert className="mb-6">
+        <Shield className="h-4 w-4" />
+        <AlertTitle>Admin Access</AlertTitle>
+        <AlertDescription>
+          You're using the admin panel with restricted access. All actions are logged for security purposes.
+        </AlertDescription>
+      </Alert>
+      
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid grid-cols-3 w-full max-w-2xl mx-auto mb-8">
           <TabsTrigger 
