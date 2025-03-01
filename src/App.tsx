@@ -32,7 +32,6 @@ function App() {
             closeButton
             toastOptions={{
               style: {
-                // Use the proper CSS-in-JS format without quotes around property names
                 "--toast-text": "var(--foreground)",
                 "--toast-border": "1px solid var(--border)",
               } as React.CSSProperties

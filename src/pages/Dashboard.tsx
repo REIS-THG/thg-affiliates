@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { AuthHandler } from "@/components/dashboard/AuthHandler";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -11,12 +11,17 @@ const Dashboard = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Handle view toggles with smooth transitions
-  const handleViewToggleWithTransition = (handler: (checked: boolean) => void) => {
-    setIsTransitioning(true);
-    setTimeout(() => {
-      handler(true); // Pass a default value to satisfy the type checker
-      setIsTransitioning(false);
-    }, 300);
+  const handleViewToggleWithTransition = (handler: (checked: boolean) => Promise<void>) => {
+    return async (checked: boolean) => {
+      setIsTransitioning(true);
+      try {
+        await handler(checked);
+      } finally {
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }
+    };
   };
 
   return (
@@ -38,11 +43,6 @@ const Dashboard = () => {
           return null;
         }
 
-        // Update this function to correctly handle checked argument
-        const toggleView = () => {
-          handleViewToggleWithTransition((checked) => handleViewToggle(!viewAll));
-        };
-
         return (
           <div className="min-h-screen bg-[#F9F7F0]">
             <Header onLogout={handleLogout} />
@@ -56,11 +56,12 @@ const Dashboard = () => {
                 className="container mx-auto px-4 sm:px-6 py-4 md:py-6"
                 role="main"
                 aria-label="Dashboard content"
+                id="main-content"
               >
                 <DashboardHeader 
                   isAdmin={isAdmin}
                   viewAll={viewAll}
-                  onViewToggle={toggleView}
+                  onViewToggle={handleViewToggleWithTransition(handleViewToggle)}
                   couponCode={couponCode}
                   userSettings={userSettings}
                   isTransitioning={isTransitioning}

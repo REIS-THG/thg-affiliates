@@ -133,9 +133,11 @@ export const AuthHandler = ({ children }: AuthHandlerProps) => {
       setUserSettings(prev => ({ ...prev, viewType: newViewType }));
       
       toast.success(`Switched to ${checked ? 'all affiliates' : 'personal'} view`);
+      return Promise.resolve();
     } catch (error) {
       console.error('Error updating view preference:', error);
       toast.error('Failed to update view preference');
+      return Promise.reject(error);
     }
   };
 
