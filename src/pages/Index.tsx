@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ChevronRight, ShieldCheck, Users } from "lucide-react";
+import { ChevronRight, ShieldCheck } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -85,50 +85,7 @@ const Index = () => {
           </div>
         </section>
         
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-[#3B751E] mb-12">
-              Key Features
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-[#F9F7F0] p-6 rounded-lg text-center">
-                <div className="bg-[#3B751E]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BarChart3 className="h-8 w-8 text-[#3B751E]" />
-                </div>
-                <h3 className="text-xl font-semibold text-[#3B751E] mb-2">
-                  Performance Tracking
-                </h3>
-                <p className="text-[#9C7705]/70">
-                  Monitor your affiliate performance with detailed analytics and reporting tools.
-                </p>
-              </div>
-              
-              <div className="bg-[#F9F7F0] p-6 rounded-lg text-center">
-                <div className="bg-[#3B751E]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-[#3B751E]" />
-                </div>
-                <h3 className="text-xl font-semibold text-[#3B751E] mb-2">
-                  User Management
-                </h3>
-                <p className="text-[#9C7705]/70">
-                  Easily manage affiliate accounts and track individual performance metrics.
-                </p>
-              </div>
-              
-              <div className="bg-[#F9F7F0] p-6 rounded-lg text-center">
-                <div className="bg-[#3B751E]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ShieldCheck className="h-8 w-8 text-[#3B751E]" />
-                </div>
-                <h3 className="text-xl font-semibold text-[#3B751E] mb-2">
-                  Admin Controls
-                </h3>
-                <p className="text-[#9C7705]/70">
-                  Powerful administration tools for managing affiliates and system settings.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* The "Key Features" section has been removed */}
         
         {isAdmin && (
           <section className="py-12 bg-[#3B751E]/10">
