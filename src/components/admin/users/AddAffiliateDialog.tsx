@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -12,12 +11,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { NewAffiliateForm } from "@/components/admin/users/types";
-import * as bcrypt from 'bcryptjs';
+import { validateNewAffiliate } from "@/components/admin/users/utils/validation";
+import { createAffiliate } from "@/components/admin/users/utils/affiliateServices";
+import { AffiliateForm } from "@/components/admin/users/AffiliateForm";
+import { SecurityAlert } from "@/components/admin/users/SecurityAlert";
 
 interface AddAffiliateDialogProps {
   onAffilateAdded: () => void;
@@ -25,6 +24,7 @@ interface AddAffiliateDialogProps {
 
 export const AddAffiliateDialog = ({ onAffilateAdded }: AddAffiliateDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [newAffiliate, setNewAffiliate] = useState<NewAffiliateForm>({
     coupon: "",
     email: "",
@@ -36,7 +36,6 @@ export const AddAffiliateDialog = ({ onAffilateAdded }: AddAffiliateDialogProps)
     email_notifications: true,
     notification_frequency: "monthly"
   });
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
   const resetNewAffiliate = () => {
     setNewAffiliate({
@@ -53,47 +52,14 @@ export const AddAffiliateDialog = ({ onAffilateAdded }: AddAffiliateDialogProps)
     setValidationErrors({});
   };
 
-  const validateNewAffiliate = () => {
-    const errors: {[key: string]: string} = {};
-    
-    if (!newAffiliate.coupon) errors.coupon = "Coupon code is required";
-    else if (!/^[A-Z0-9]+$/.test(newAffiliate.coupon)) errors.coupon = "Coupon must be uppercase letters and numbers only";
-    
-    if (newAffiliate.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newAffiliate.email)) 
-      errors.email = "Invalid email format";
-    
-    if (!newAffiliate.password) errors.password = "Password is required";
-    else if (newAffiliate.password.length < 6) errors.password = "Password must be at least 6 characters";
-    
-    if (newAffiliate.password !== newAffiliate.confirmPassword) 
-      errors.confirmPassword = "Passwords don't match";
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   const handleAddAffiliate = async () => {
-    if (!validateNewAffiliate()) return;
+    const { errors, isValid } = validateNewAffiliate(newAffiliate);
+    setValidationErrors(errors);
+    
+    if (!isValid) return;
     
     try {
-      // Hash password with bcrypt before storing
-      const hashedPassword = await bcrypt.hash(newAffiliate.password, 10);
-      
-      const { error } = await supabase
-        .from('thg_affiliate_users')
-        .insert([
-          {
-            coupon: newAffiliate.coupon,
-            password: hashedPassword,
-            email: newAffiliate.email || null,
-            role: 'affiliate',
-            payment_method: newAffiliate.payment_method || null,
-            payment_details: newAffiliate.payment_details || null,
-            notification_email: newAffiliate.notification_email || null,
-            notification_frequency: newAffiliate.notification_frequency || null,
-            email_notifications: newAffiliate.email_notifications
-          }
-        ]);
+      const { error } = await createAffiliate(newAffiliate);
       
       if (error) throw error;
       
@@ -134,76 +100,15 @@ export const AddAffiliateDialog = ({ onAffilateAdded }: AddAffiliateDialogProps)
             Create a new affiliate account with a unique coupon code.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="coupon" className="text-right">
-              Coupon Code*
-            </Label>
-            <Input
-              id="coupon"
-              placeholder="EXAMPLE25"
-              className={`col-span-3 ${validationErrors.coupon ? 'border-red-500' : ''}`}
-              value={newAffiliate.coupon}
-              onChange={(e) => setNewAffiliate({...newAffiliate, coupon: e.target.value.toUpperCase()})}
-            />
-            {validationErrors.coupon && (
-              <div className="col-span-3 col-start-2 text-sm text-red-500">{validationErrors.coupon}</div>
-            )}
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="email" className="text-right">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="affiliate@example.com"
-              className={`col-span-3 ${validationErrors.email ? 'border-red-500' : ''}`}
-              value={newAffiliate.email}
-              onChange={(e) => setNewAffiliate({...newAffiliate, email: e.target.value})}
-            />
-            {validationErrors.email && (
-              <div className="col-span-3 col-start-2 text-sm text-red-500">{validationErrors.email}</div>
-            )}
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="password" className="text-right">
-              Password*
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              className={`col-span-3 ${validationErrors.password ? 'border-red-500' : ''}`}
-              value={newAffiliate.password}
-              onChange={(e) => setNewAffiliate({...newAffiliate, password: e.target.value})}
-            />
-            {validationErrors.password && (
-              <div className="col-span-3 col-start-2 text-sm text-red-500">{validationErrors.password}</div>
-            )}
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="confirmPassword" className="text-right">
-              Confirm*
-            </Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              className={`col-span-3 ${validationErrors.confirmPassword ? 'border-red-500' : ''}`}
-              value={newAffiliate.confirmPassword}
-              onChange={(e) => setNewAffiliate({...newAffiliate, confirmPassword: e.target.value})}
-            />
-            {validationErrors.confirmPassword && (
-              <div className="col-span-3 col-start-2 text-sm text-red-500">{validationErrors.confirmPassword}</div>
-            )}
-          </div>
-        </div>
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Password Security</AlertTitle>
-          <AlertDescription>
-            The password will be stored securely. New affiliates should change their password after first login.
-          </AlertDescription>
-        </Alert>
+        
+        <AffiliateForm 
+          newAffiliate={newAffiliate}
+          setNewAffiliate={setNewAffiliate}
+          validationErrors={validationErrors}
+        />
+        
+        <SecurityAlert />
+        
         <DialogFooter>
           <Button
             type="button" 
