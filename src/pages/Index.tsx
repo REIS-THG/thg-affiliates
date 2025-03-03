@@ -132,7 +132,7 @@ const Index = () => {
                 </div>
                 
                 <Button
-                  onClick={() => window.open("https://forms.example.com/affiliate-application", "_blank")}
+                  onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSfqUn0QmIJhc1wf5u24k9zXoy9ingwqC5JD6OhvzfRbprbXHg/viewform?usp=sharing", "_blank")}
                   size="lg"
                   className="bg-[#3B751E] hover:bg-[#3B751E]/90 text-white"
                 >
