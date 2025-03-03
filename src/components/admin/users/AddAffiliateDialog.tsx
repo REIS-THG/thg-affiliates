@@ -14,8 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertCircle, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Plus } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Plus } from "lucide-react";
 import { NewAffiliateForm } from "@/components/admin/users/types";
 import * as bcrypt from 'bcryptjs';
 
