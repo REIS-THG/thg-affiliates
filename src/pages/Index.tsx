@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ShieldCheck, Users } from "lucide-react";
+import { Logo } from "@/components/header/Logo";
+
 const Index = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,11 +20,12 @@ const Index = () => {
       }
     }
   }, []);
+
   return <div className="min-h-screen bg-[#F9F7F0] flex flex-col">
       <header className="bg-white/80 backdrop-blur-sm border-b border-[#9C7705]/10">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
-            
+            <Logo />
             <span className="font-bold text-xl text-[#3B751E]">
               Affiliate Portal
             </span>
@@ -132,9 +135,10 @@ const Index = () => {
       
       <footer className="bg-white border-t border-[#9C7705]/10 py-8">
         <div className="container mx-auto px-4 text-center text-[#9C7705]/70 text-sm">
-          <p>&copy; {new Date().getFullYear()} Affiliate Management Portal. All rights reserved.</p>
+          <p>&copy; 2025 TotalHomeGrown. All rights reserved.</p>
         </div>
       </footer>
     </div>;
 };
+
 export default Index;
