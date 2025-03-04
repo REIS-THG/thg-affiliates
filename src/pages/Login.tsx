@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -213,9 +212,9 @@ const Login = () => {
         <div className="text-center mb-6">
           <div className="flex justify-center mb-2">
             <img
-              src="/placeholder.svg"
-              alt="Logo"
-              className="h-12 w-12"
+              src="/lovable-uploads/b62c65de-473f-4784-af56-938c81068d3d.png"
+              alt="Total Home Grown Logo"
+              className="h-16 w-auto"
             />
           </div>
           <h1 className="text-2xl font-bold text-[#3B751E]">Welcome Back</h1>
